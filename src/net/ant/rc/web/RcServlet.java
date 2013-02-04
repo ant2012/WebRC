@@ -6,8 +6,10 @@ import gnu.io.UnsupportedCommOperationException;
 import net.ant.rc.serial.CommPortException;
 import net.ant.rc.serial.SerialCommunicator;
 
+import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.util.TooManyListenersException;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,25 +23,16 @@ public class RcServlet extends javax.servlet.http.HttpServlet {
         int x = Integer.valueOf(request.getParameter("x"));
         int y = Integer.valueOf(request.getParameter("y"));
 
-        SerialCommunicator serialCommunicator = null;
+        final ServletContext servletContext = request.getServletContext();
+
+        LinkedBlockingQueue<SerialCommand> commandQueue = (LinkedBlockingQueue<SerialCommand>) servletContext.getAttribute("CommandQueue");
         try {
-            serialCommunicator = new SerialCommunicator();
-            System.out.println(serialCommunicator.digitalCommandWithResult(x, y));
-        } catch (CommPortException e) {
+            commandQueue.put(new SerialCommand("Digital", x, y));
+        } catch (InterruptedException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (NoSuchPortException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (PortInUseException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (UnsupportedCommOperationException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (TooManyListenersException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } finally {
-            if (serialCommunicator != null)
-                serialCommunicator.disconnect();
         }
-        System.out.println("x=" + String.valueOf(x) + "; y=" + String.valueOf(y));
+
+        System.out.println("RCServlet: x=" + String.valueOf(x) + "; y=" + String.valueOf(y));
     }
 
     protected void doGet(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException, IOException {

@@ -167,8 +167,8 @@ public class SerialCommunicator implements SerialPortEventListener {
 
         //Normalize speeds to range 0..255 using max value
         c = (c==0)?0:255 * c / this.maxSpeed;
-        x = (x==0)?0:255 * x / this.maxClientValue;
-        y = (y==0)?0:255 * y / this.maxClientValue;
+        x = (this.maxClientValue==0)?0:255 * x / this.maxClientValue;
+        y = (this.maxClientValue==0)?0:255 * y / this.maxClientValue;
 
         //Set direction sign
         int sign = (y<0)?-1:1;
