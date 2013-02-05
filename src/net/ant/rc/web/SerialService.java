@@ -4,6 +4,7 @@ import net.ant.rc.serial.CommPortException;
 import net.ant.rc.serial.SerialCommunicator;
 
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,7 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class SerialService implements Runnable {
 
     private final SerialCommunicator serialCommunicator;
-    private final LinkedBlockingQueue<SerialCommand> commandQueue;
+    private final PriorityBlockingQueue<SerialCommand> commandQueue;
 
     @Override
     public void run() {
@@ -34,7 +35,7 @@ public class SerialService implements Runnable {
         }
    }
 
-    public SerialService(SerialCommunicator serialCommunicator, LinkedBlockingQueue<SerialCommand> commandQueue) {
+    public SerialService(SerialCommunicator serialCommunicator, PriorityBlockingQueue<SerialCommand> commandQueue) {
         this.serialCommunicator = serialCommunicator;
         this.commandQueue = commandQueue;
     }

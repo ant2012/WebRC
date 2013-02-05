@@ -6,6 +6,10 @@ ServletCommunicator = function () {
     this.sendVector = function (vector) {
         this.x = vector.x;
         this.y = vector.y;
+        this.sendLastVector();
+    };
+
+    this.sendLastVector = function () {
         this.createJSON();
         this.jQueryAjaxPost();
     };
@@ -19,6 +23,8 @@ ServletCommunicator = function () {
     };
 
     this.createJSON = function () {
-        this.jsonData = {x: this.x, y: this.y};
+        var d= new Date();
+        var milliseconds = d.getMilliseconds();
+        this.jsonData = {x: this.x, y: this.y, milliseconds: milliseconds};
     };
 };

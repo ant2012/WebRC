@@ -42,7 +42,8 @@ var mouseX, mouseY,
 document.body.appendChild(ship.canvas);
 
 setInterval(draw, 1000/35);
-
+servletCommunicator.sendVector(new Vector2(0, 0));
+setInterval(pingServlet, 1000);
 
 if(touchable) {
     canvas.addEventListener( 'touchstart', onTouchStart, false );
@@ -54,6 +55,10 @@ if(touchable) {
     canvas.addEventListener( 'mousedown', onMouseDown, false );
     canvas.addEventListener( 'mousemove', onMouseMove, false );
     canvas.addEventListener( 'mouseup'  , onMouseUp  , false );
+}
+
+function pingServlet(){
+    servletCommunicator.sendLastVector();
 }
 
 function resetCanvas (e) {

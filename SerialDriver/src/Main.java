@@ -13,8 +13,7 @@ public class Main {
             serialCommunicator = new SerialCommunicator();
 
             System.out.println(serialCommunicator.commandWithResult("version"));
-            System.out.println(serialCommunicator.commandWithResult("cw"));
-            System.out.println(serialCommunicator.commandWithResult("ccw"));
+            System.out.println(serialCommunicator.digitalCommandWithResult(-100,0));
         } catch (CommPortException e) {
             e.printStackTrace();
         } catch (NoSuchPortException e) {

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.TooManyListenersException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 @WebListener()
 public class WebRCContextHolder implements ServletContextListener,
@@ -47,7 +48,7 @@ public class WebRCContextHolder implements ServletContextListener,
             SerialCommunicator serialCommunicator = new SerialCommunicator();
             servletContext.setAttribute("SerialCommunicator", serialCommunicator);
 
-            LinkedBlockingQueue<SerialCommand> commandQueue = new LinkedBlockingQueue<SerialCommand>();
+            PriorityBlockingQueue<SerialCommand> commandQueue = new PriorityBlockingQueue<SerialCommand>();
             servletContext.setAttribute("CommandQueue", commandQueue);
 
             SerialService serialService = new SerialService(serialCommunicator, commandQueue);
@@ -75,7 +76,9 @@ public class WebRCContextHolder implements ServletContextListener,
          (the Web application) is undeployed or 
          Application Server shuts down.
       */
-        System.out.println("Context Destroyed");
+        ServletContext servletContext = sce.getServletContext();
+        SerialCommunicator serialCommunicator = (SerialCommunicator) servletContext.getAttribute("SerialCommunicator");
+        serialCommunicator.disconnect();
     }
 
     // -------------------------------------------------------

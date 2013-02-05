@@ -152,7 +152,7 @@ public class SerialCommunicator implements SerialPortEventListener {
     int maxSpeed = 0; // speed is c = sqrt(x2+y2)
 
     public String digitalCommandWithResult(int x, int y) throws CommPortException {
-        String command = generate2WDCommand(x, y);
+        String command = generate2WDCommand(x, -y);
         String result  = commandWithResult(command);
         return result;
     }
@@ -160,8 +160,8 @@ public class SerialCommunicator implements SerialPortEventListener {
     private String generate2WDCommand(int x, int y){
 
         //Save max values - it is self adaptation
-        if(x > this.maxClientValue)this.maxClientValue = x;
-        if(y > this.maxClientValue)this.maxClientValue = y;
+        if(Math.abs(x) > this.maxClientValue)this.maxClientValue = Math.abs(x);
+        if(Math.abs(y) > this.maxClientValue)this.maxClientValue = Math.abs(y);
         int c = (int) Math.round(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)));
         if(c > this.maxSpeed)this.maxSpeed = c;
 

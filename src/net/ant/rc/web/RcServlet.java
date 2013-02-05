@@ -1,15 +1,8 @@
 package net.ant.rc.web;
 
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.UnsupportedCommOperationException;
-import net.ant.rc.serial.CommPortException;
-import net.ant.rc.serial.SerialCommunicator;
-
 import javax.servlet.ServletContext;
 import java.io.IOException;
-import java.util.TooManyListenersException;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 /**
  * Created with IntelliJ IDEA.
@@ -22,15 +15,12 @@ public class RcServlet extends javax.servlet.http.HttpServlet {
     protected void doPost(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException, IOException {
         int x = Integer.valueOf(request.getParameter("x"));
         int y = Integer.valueOf(request.getParameter("y"));
+        long timeMillis = Long.valueOf(request.getParameter("milliseconds"));
 
         final ServletContext servletContext = request.getServletContext();
 
-        LinkedBlockingQueue<SerialCommand> commandQueue = (LinkedBlockingQueue<SerialCommand>) servletContext.getAttribute("CommandQueue");
-        try {
-            commandQueue.put(new SerialCommand("Digital", x, y));
-        } catch (InterruptedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+        PriorityBlockingQueue<SerialCommand> commandQueue = (PriorityBlockingQueue<SerialCommand>) servletContext.getAttribute("CommandQueue");
+        commandQueue.put(new SerialCommand("Digital", x, y, timeMillis));
 
         System.out.println("RCServlet: x=" + String.valueOf(x) + "; y=" + String.valueOf(y));
     }
