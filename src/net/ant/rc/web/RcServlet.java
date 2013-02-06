@@ -1,5 +1,7 @@
 package net.ant.rc.web;
 
+import net.ant.rc.serial.SerialCommand;
+
 import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -19,6 +21,7 @@ public class RcServlet extends javax.servlet.http.HttpServlet {
 
         final ServletContext servletContext = request.getServletContext();
 
+        @SuppressWarnings("unchecked")//Yes, i thought wery hard :) servlet may just throw ClassCastException
         PriorityBlockingQueue<SerialCommand> commandQueue = (PriorityBlockingQueue<SerialCommand>) servletContext.getAttribute("CommandQueue");
         commandQueue.put(new SerialCommand("Digital", x, y, timeMillis));
 

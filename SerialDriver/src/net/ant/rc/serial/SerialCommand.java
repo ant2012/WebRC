@@ -1,4 +1,4 @@
-package net.ant.rc.web;
+package net.ant.rc.serial;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,7 +23,7 @@ public class SerialCommand implements Comparable{
     @Override
     public int compareTo(Object o) {
         //this > object => 1
-        int result = 0;
+        int result;
         SerialCommand obj = (SerialCommand)o;
         if (this.timeMillis == obj.timeMillis){
             result = 0;

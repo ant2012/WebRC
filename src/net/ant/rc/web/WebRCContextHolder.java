@@ -10,7 +10,9 @@ import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
 import gnu.io.UnsupportedCommOperationException;
 import net.ant.rc.serial.CommPortException;
+import net.ant.rc.serial.SerialCommand;
 import net.ant.rc.serial.SerialCommunicator;
+import net.ant.rc.serial.SerialService;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -22,8 +24,6 @@ import javax.servlet.http.HttpSessionListener;
 import javax.servlet.http.HttpSessionBindingEvent;
 import java.io.IOException;
 import java.util.TooManyListenersException;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
 @WebListener()
@@ -48,7 +48,7 @@ public class WebRCContextHolder implements ServletContextListener,
             SerialCommunicator serialCommunicator = new SerialCommunicator();
             servletContext.setAttribute("SerialCommunicator", serialCommunicator);
 
-            PriorityBlockingQueue<SerialCommand> commandQueue = new PriorityBlockingQueue<SerialCommand>();
+            PriorityBlockingQueue<SerialCommand> commandQueue = new PriorityBlockingQueue();
             servletContext.setAttribute("CommandQueue", commandQueue);
 
             SerialService serialService = new SerialService(serialCommunicator, commandQueue);

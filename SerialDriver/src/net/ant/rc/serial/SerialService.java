@@ -1,9 +1,5 @@
-package net.ant.rc.web;
+package net.ant.rc.serial;
 
-import net.ant.rc.serial.CommPortException;
-import net.ant.rc.serial.SerialCommunicator;
-
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
 /**
@@ -15,8 +11,10 @@ import java.util.concurrent.PriorityBlockingQueue;
  */
 public class SerialService implements Runnable {
 
+    private final long MAX_LAG_AALOWED = 2000;
     private final SerialCommunicator serialCommunicator;
     private final PriorityBlockingQueue<SerialCommand> commandQueue;
+    private long lastCommandMillis = 0;
 
     @Override
     public void run() {
@@ -24,6 +22,14 @@ public class SerialService implements Runnable {
         while(true){
             try {
                 SerialCommand serialCommand = commandQueue.take();
+
+                //Bypass the entries older then last sended
+                if (serialCommand.timeMillis < lastCommandMillis)continue;
+
+                //Bypass enries older then the LAG bound
+                if (serialCommand.timeMillis - lastCommandMillis > MAX_LAG_AALOWED)continue;
+
+                lastCommandMillis = serialCommand.timeMillis;
                 if (serialCommand.commandType.equals("Digital")){
                     System.out.println(serialCommunicator.digitalCommandWithResult(serialCommand.x, serialCommand.y));
                 }
