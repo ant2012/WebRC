@@ -15,14 +15,18 @@ import java.util.concurrent.PriorityBlockingQueue;
  */
 public class RcServlet extends javax.servlet.http.HttpServlet {
     protected void doPost(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException, IOException {
-        int x = Integer.valueOf(request.getParameter("x"));
-        int y = Integer.valueOf(request.getParameter("y"));
-        long timeMillis = Long.valueOf(request.getParameter("milliseconds"));
-
         final ServletContext servletContext = request.getServletContext();
 
         @SuppressWarnings("unchecked")//Yes, i thought wery hard :) servlet may just throw ClassCastException
         PriorityBlockingQueue<SerialCommand> commandQueue = (PriorityBlockingQueue<SerialCommand>) servletContext.getAttribute("CommandQueue");
+
+        //SerialService may be stopped (In case of start failure)
+        if (commandQueue == null) return;
+
+        int x = Integer.valueOf(request.getParameter("x"));
+        int y = Integer.valueOf(request.getParameter("y"));
+        long timeMillis = Long.valueOf(request.getParameter("milliseconds"));
+
         commandQueue.put(new SerialCommand("Digital", x, y, timeMillis));
 
         System.out.println("RCServlet: x=" + String.valueOf(x) + "; y=" + String.valueOf(y));

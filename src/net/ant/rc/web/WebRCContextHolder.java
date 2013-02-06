@@ -6,9 +6,6 @@ package net.ant.rc.web; /**
  * To change this template use File | Settings | File Templates.
  */
 
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.UnsupportedCommOperationException;
 import net.ant.rc.serial.CommPortException;
 import net.ant.rc.serial.SerialCommand;
 import net.ant.rc.serial.SerialCommunicator;
@@ -19,16 +16,17 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
-import javax.servlet.http.HttpSessionBindingEvent;
-import java.io.IOException;
-import java.util.TooManyListenersException;
 import java.util.concurrent.PriorityBlockingQueue;
 
 @WebListener()
 public class WebRCContextHolder implements ServletContextListener,
         HttpSessionListener, HttpSessionAttributeListener {
+
+    SerialCommunicator serialCommunicator;
+    SerialService serialService;
 
     // Public constructor is required by servlet spec
     public WebRCContextHolder() {
@@ -45,26 +43,16 @@ public class WebRCContextHolder implements ServletContextListener,
         ServletContext servletContext = sce.getServletContext();
 
         try {
-            SerialCommunicator serialCommunicator = new SerialCommunicator();
-            servletContext.setAttribute("SerialCommunicator", serialCommunicator);
+            this.serialCommunicator = new SerialCommunicator();
+            servletContext.setAttribute("SerialCommunicator", this.serialCommunicator);
 
-            PriorityBlockingQueue<SerialCommand> commandQueue = new PriorityBlockingQueue();
+            PriorityBlockingQueue<SerialCommand> commandQueue = new PriorityBlockingQueue<>();
             servletContext.setAttribute("CommandQueue", commandQueue);
 
-            SerialService serialService = new SerialService(serialCommunicator, commandQueue);
-            Thread serialServiceThread = new Thread(serialService);
+            this.serialService = new SerialService(this.serialCommunicator, commandQueue);
+            Thread serialServiceThread = new Thread(this.serialService);
             serialServiceThread.start();
         } catch (CommPortException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (NoSuchPortException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (PortInUseException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (UnsupportedCommOperationException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (TooManyListenersException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
@@ -76,9 +64,10 @@ public class WebRCContextHolder implements ServletContextListener,
          (the Web application) is undeployed or 
          Application Server shuts down.
       */
-        ServletContext servletContext = sce.getServletContext();
-        SerialCommunicator serialCommunicator = (SerialCommunicator) servletContext.getAttribute("SerialCommunicator");
-        serialCommunicator.disconnect();
+        if(this.serialCommunicator!=null)
+            this.serialCommunicator.disconnect();
+        if(this.serialService != null)
+            this.serialService.stop();
     }
 
     // -------------------------------------------------------

@@ -4,6 +4,7 @@ import gnu.io.*;
 
 import java.io.*;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Properties;
 import java.util.TooManyListenersException;
 
@@ -26,13 +27,28 @@ public class SerialCommunicator implements SerialPortEventListener {
     final static int NEW_LINE_ASCII = 10;
     final static int TIMEOUT = 5000;
 
-    public SerialCommunicator() throws CommPortException, NoSuchPortException, PortInUseException, UnsupportedCommOperationException, IOException, TooManyListenersException {
-        String portName = getConfiguredPortName();
-        serialPort = openSerialPort(portName);
-        in = serialPort.getInputStream();
-        out = serialPort.getOutputStream();
-        serialPort.addEventListener(this);
-        serialPort.notifyOnDataAvailable(true);
+    public SerialCommunicator() throws CommPortException {
+        //Trying to use configuration file "arduino.conf"
+        try {
+            String portName = getConfiguredPortName();
+            openSerialPort(portName);
+            initStreams();
+            initListener();
+            getFirmwareVersion(portName);
+        } catch (CommPortException | PortInUseException | NoSuchPortException | UnsupportedCommOperationException | TooManyListenersException | IOException e) {
+            e.printStackTrace();
+        }
+        detectCommPort();
+    }
+
+    private void initStreams() throws IOException {
+        this.in = this.serialPort.getInputStream();
+        this.out = this.serialPort.getOutputStream();
+    }
+
+    private void initListener() throws TooManyListenersException {
+        this.serialPort.addEventListener(this);
+        this.serialPort.notifyOnDataAvailable(true);
         try {
             Thread.sleep(TIMEOUT);
         } catch (InterruptedException e) {
@@ -52,8 +68,6 @@ public class SerialCommunicator implements SerialPortEventListener {
             config.load(in);
             in.close();
             commPortName = config.getProperty("CommPortName");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -64,7 +78,7 @@ public class SerialCommunicator implements SerialPortEventListener {
         return commPortName;
     }
 
-    private SerialPort openSerialPort(String portName) throws NoSuchPortException, CommPortException, PortInUseException, UnsupportedCommOperationException {
+    private void openSerialPort(String portName) throws NoSuchPortException, CommPortException, PortInUseException, UnsupportedCommOperationException {
         System.out.println("Getting PortID for \"" + portName + "\"..");
         CommPortIdentifier commPortIdentifier = CommPortIdentifier.getPortIdentifier(portName);
         System.out.println("Checking port properties..");
@@ -75,20 +89,24 @@ public class SerialCommunicator implements SerialPortEventListener {
             throw new CommPortException("Port is already in use.");
         }
         System.out.println("Opening port..");
-        CommPort commPort = commPortIdentifier.open("ArduinoDriver", 2000);
+        openSerialPort(commPortIdentifier);
+    }
+
+    private void openSerialPort(CommPortIdentifier commPortIdentifier) throws PortInUseException, CommPortException, UnsupportedCommOperationException {
+        CommPort commPort = commPortIdentifier.open(this.getClass().getName(), 2000);
         System.out.println("Checking port properties..");
         if (!(commPort instanceof SerialPort)){
+            commPort.close();
             throw new CommPortException("Wrong port type. Serial port expected.");
         }
-        SerialPort serialPort = (SerialPort) commPort;
+        this.serialPort = (SerialPort) commPort;
         System.out.println("Setting up the port..");
-        serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
-        return serialPort;
+        this.serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
     }
 
     private void readSomeBytesFromInput(){
         if (isReadComplete) return;
-        byte singleData = 0;
+        byte singleData;
         try {
             while((singleData = (byte)in.read()) > -1){
                 if (singleData != NEW_LINE_ASCII)
@@ -153,8 +171,7 @@ public class SerialCommunicator implements SerialPortEventListener {
 
     public String digitalCommandWithResult(int x, int y) throws CommPortException {
         String command = generate2WDCommand(x, -y);
-        String result  = commandWithResult(command);
-        return result;
+        return commandWithResult(command);
     }
 
     private String generate2WDCommand(int x, int y){
@@ -189,8 +206,7 @@ public class SerialCommunicator implements SerialPortEventListener {
             leftWheelSpeed = y;
         }
         //Format is "Digital:leftWheelSpeed,rightWheelSpeed"
-        String command = "Digital:" + leftWheelSpeed + "," + rightWheelSpeed;
-        return command;
+        return "Digital:" + leftWheelSpeed + "," + rightWheelSpeed;
     }
 
     public void disconnect()
@@ -207,5 +223,48 @@ public class SerialCommunicator implements SerialPortEventListener {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void detectCommPort() throws CommPortException {
+        if (this.serialPort != null)return;
+        System.out.println("Trying to detect Arduino on any serial port..");
+        Enumeration thePorts = CommPortIdentifier.getPortIdentifiers();
+        while (thePorts.hasMoreElements()) {
+            CommPortIdentifier commPortIdentifier = (CommPortIdentifier) thePorts.nextElement();
+            if (commPortIdentifier.getPortType() != CommPortIdentifier.PORT_SERIAL)continue;
+            System.out.println("Trying to open port " + commPortIdentifier.getName() + " as Serial");
+            try {
+                openSerialPort(commPortIdentifier);
+            } catch (PortInUseException | CommPortException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            } catch (UnsupportedCommOperationException e) {
+                this.serialPort = null;
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+            if (this.serialPort == null)continue;
+
+            //Check port by querying Firmware version
+            try {
+                initStreams();
+                initListener();
+                getFirmwareVersion(commPortIdentifier.getName());
+                saveDetectedPortConfiguration(commPortIdentifier.getName());
+            } catch (Exception e) {
+                this.serialPort.close();
+                this.serialPort = null;
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+        }
+        if (this.serialPort == null) throw new CommPortException("Unable to detect Arduino on any COM port");
+    }
+
+    private void getFirmwareVersion(String portName) throws CommPortException {
+        String fwVersion = commandWithResult("version");
+        System.out.println("Port " + portName + " looks like her magesty Arduino!");
+        System.out.println("Detected: " + fwVersion);
+    }
+
+    private void saveDetectedPortConfiguration(String portName) {
+        //TODO: Save detected portName to file "arduino.conf"
     }
 }

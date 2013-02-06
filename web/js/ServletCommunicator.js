@@ -24,7 +24,7 @@ ServletCommunicator = function () {
 
     this.createJSON = function () {
         var d= new Date();
-        var milliseconds = d.getMilliseconds();
+        var milliseconds = d.getTime();
         this.jsonData = {x: this.x, y: this.y, milliseconds: milliseconds};
     };
 };
