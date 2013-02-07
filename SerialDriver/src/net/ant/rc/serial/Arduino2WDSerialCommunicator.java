@@ -15,7 +15,11 @@ public class Arduino2WDSerialCommunicator extends SerialCommunicator implements 
     int maxClientValue = 0; // X or Y
     int maxSpeed = 0; // speed is c = sqrt(x2+y2)
 
-    public Arduino2WDSerialCommunicator() throws CommPortException, UnsupportedHardwareException {
+    public Arduino2WDSerialCommunicator(SerialCommunicator serialCommunicator) {
+        super(serialCommunicator);
+    }
+
+    public Arduino2WDSerialCommunicator() throws UnsupportedHardwareException, CommPortException {
         super();
     }
 

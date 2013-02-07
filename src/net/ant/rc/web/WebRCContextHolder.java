@@ -40,12 +40,15 @@ public class WebRCContextHolder implements ServletContextListener,
          You can initialize servlet context related data here.
       */
         ServletContext servletContext = sce.getServletContext();
+        String realPath = servletContext.getRealPath("/");
 
         try {
             //Выбор конкретного драйвера
-            SerialCommunicator sc = new SerialCommunicator();
+            SerialCommunicator sc = new SerialCommunicator(realPath);
+            sc.disconnect();
             if (sc.getMovingHardwareType() == sc.HW_TYPE_ARDUINO_2WD)
-                this.serialCommunicator = (Arduino2WDSerialCommunicator)sc;
+                this.serialCommunicator = new Arduino2WDSerialCommunicator(sc);
+                //this.serialCommunicator = (Arduino2WDSerialCommunicator)sc;
             //Add new hardware here
 
             //servletContext.setAttribute("SerialCommunicator", this.serialCommunicator);

@@ -20,6 +20,8 @@ import java.util.TooManyListenersException;
 public class SerialCommunicator implements SerialPortEventListener{
     public final int HW_TYPE_ARDUINO_2WD = 1;
 
+    private final String realPath;
+
     private boolean isReadComplete = false;
     private byte[] receivedData = new byte[200];
     private int receivedCount = 0;
@@ -28,9 +30,25 @@ public class SerialCommunicator implements SerialPortEventListener{
     private InputStream in = null;
     private OutputStream out = null;
 
-    final private int NEW_LINE_ASCII = 10;
-    final private int TIMEOUT = 5000;
-    final private String configFileName = "arduino.conf";
+    private final int NEW_LINE_ASCII = 10;
+    private final int TIMEOUT = 5000;
+    private final String configFileName = "arduino.conf";
+
+    public SerialCommunicator(SerialCommunicator sc) {
+        this.realPath = sc.realPath;
+        this.isReadComplete = sc.isReadComplete;
+        this.receivedData= sc.receivedData;
+        this.receivedCount = sc.receivedCount;
+
+        this.serialPort = sc.serialPort;
+        this.in = sc.in;
+        this.out = sc.out;
+    }
+
+    public SerialCommunicator() throws UnsupportedHardwareException, CommPortException {
+        this.realPath = null;
+        init();
+    }
 
     public int getMovingHardwareType() {
         return movingHardwareType;
@@ -38,8 +56,12 @@ public class SerialCommunicator implements SerialPortEventListener{
 
     private int movingHardwareType = 0;
 
-    public SerialCommunicator() throws CommPortException, UnsupportedHardwareException {
-        //Trying to use configuration file "arduino.conf"
+    public SerialCommunicator(String realPath) throws CommPortException, UnsupportedHardwareException {
+        this.realPath = realPath;
+        init();
+    }
+
+    private void init() throws CommPortException, UnsupportedHardwareException {
         try {
             String portName = getConfiguredPortName();
             openSerialPort(portName);
@@ -55,12 +77,16 @@ public class SerialCommunicator implements SerialPortEventListener{
 
     private void getHardwareType() throws CommPortException, UnsupportedHardwareException {
         String result = sendCommand("hardware");
-        if (result.equalsIgnoreCase("Arduino2WD"))
+        if (result.startsWith("Arduino2WD"))
             movingHardwareType = HW_TYPE_ARDUINO_2WD;
         //Add new platform here
 
-        if (movingHardwareType == 0)
-            throw new UnsupportedHardwareException(result);
+        if (movingHardwareType == 0) {
+            if (result.startsWith("Arduino"))
+               throw new UnsupportedHardwareException("Hardware of type " + result + " not supported");
+            else
+               throw new UnsupportedHardwareException("\"Hardware\" command is not supported by Firmware");
+        }
         System.out.println("Hardware detected: " + result);
     }
 
@@ -84,7 +110,7 @@ public class SerialCommunicator implements SerialPortEventListener{
         Properties config = new Properties();
         String commPortName = null;
         InputStream in = null;
-        // First try loading from the current directory
+        System.out.println("First try loading from the current directory");
         try {
             in = new FileInputStream(configFileName);
         } catch (FileNotFoundException e) {
@@ -92,7 +118,7 @@ public class SerialCommunicator implements SerialPortEventListener{
         }
         try {
             if (in == null){
-                // Try loading from classpath related project root
+                System.out.println("Try loading from classpath related project root");
                 in = this.getClass().getClassLoader()
                         .getResourceAsStream("../../" +configFileName);
             }
@@ -258,13 +284,14 @@ public class SerialCommunicator implements SerialPortEventListener{
     }
 
     private void saveDetectedPortConfiguration(String portName) {
-        //TODO: Test this method
+        //TODO: Не работает, FileNotFoundException (Access is denied)
         System.out.println("Saving " + portName + " to configuration file for future runs");
         Properties config = new Properties();
         config.setProperty("CommPortName", portName);
         FileOutputStream out;
         try {
-            out = new FileOutputStream(configFileName);
+            String fileName = (this.realPath!=null)?realPath + "/" + configFileName:configFileName;
+            out = new FileOutputStream(fileName);
             config.store(out, "Automatically detected port configuration");
             out.close();
         } catch (IOException e) {
