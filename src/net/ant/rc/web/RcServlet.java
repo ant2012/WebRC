@@ -1,6 +1,6 @@
 package net.ant.rc.web;
 
-import net.ant.rc.serial.SerialCommand;
+import net.ant.rc.serial.VectorCommand;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
@@ -18,7 +18,7 @@ public class RcServlet extends javax.servlet.http.HttpServlet {
         final ServletContext servletContext = request.getServletContext();
 
         @SuppressWarnings("unchecked")//Yes, i thought wery hard :) servlet may just throw ClassCastException
-        PriorityBlockingQueue<SerialCommand> commandQueue = (PriorityBlockingQueue<SerialCommand>) servletContext.getAttribute("CommandQueue");
+        PriorityBlockingQueue<VectorCommand> commandQueue = (PriorityBlockingQueue<VectorCommand>) servletContext.getAttribute("CommandQueue");
 
         //SerialService may be stopped (In case of start failure)
         if (commandQueue == null) return;
@@ -27,7 +27,7 @@ public class RcServlet extends javax.servlet.http.HttpServlet {
         int y = Integer.valueOf(request.getParameter("y"));
         long timeMillis = Long.valueOf(request.getParameter("milliseconds"));
 
-        commandQueue.put(new SerialCommand("Digital", x, y, timeMillis));
+        commandQueue.put(new VectorCommand("Digital", x, y, timeMillis));
 
         System.out.println("RCServlet: x=" + String.valueOf(x) + "; y=" + String.valueOf(y));
     }

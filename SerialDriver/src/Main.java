@@ -1,14 +1,15 @@
-import net.ant.rc.serial.CommPortException;
-import net.ant.rc.serial.SerialCommunicator;
+import net.ant.rc.serial.Arduino2WDSerialCommunicator;
+import net.ant.rc.serial.exception.CommPortException;
+import net.ant.rc.serial.exception.UnsupportedHardwareException;
 
 public class Main {
 
     public static void main(String[] args) {
-        SerialCommunicator serialCommunicator = null;
+        Arduino2WDSerialCommunicator serialCommunicator = null;
         try {
-            serialCommunicator = new SerialCommunicator();
-            System.out.println(serialCommunicator.digitalCommandWithResult(-100,0));
-        } catch (CommPortException e) {
+            serialCommunicator = new Arduino2WDSerialCommunicator();
+            System.out.println(serialCommunicator.sendVectorCommand(-100, 0));
+        } catch (CommPortException | UnsupportedHardwareException e) {
             e.printStackTrace();
         } finally {
             if (serialCommunicator != null)

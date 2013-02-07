@@ -6,10 +6,9 @@ package net.ant.rc.web; /**
  * To change this template use File | Settings | File Templates.
  */
 
-import net.ant.rc.serial.CommPortException;
-import net.ant.rc.serial.SerialCommand;
-import net.ant.rc.serial.SerialCommunicator;
-import net.ant.rc.serial.SerialService;
+import net.ant.rc.serial.*;
+import net.ant.rc.serial.exception.CommPortException;
+import net.ant.rc.serial.exception.UnsupportedHardwareException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -25,7 +24,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 public class WebRCContextHolder implements ServletContextListener,
         HttpSessionListener, HttpSessionAttributeListener {
 
-    SerialCommunicator serialCommunicator;
+    SerialCommunicatorInterface serialCommunicator;
     SerialService serialService;
 
     // Public constructor is required by servlet spec
@@ -43,17 +42,22 @@ public class WebRCContextHolder implements ServletContextListener,
         ServletContext servletContext = sce.getServletContext();
 
         try {
-            this.serialCommunicator = new SerialCommunicator();
-            servletContext.setAttribute("SerialCommunicator", this.serialCommunicator);
+            //Выбор конкретного драйвера
+            SerialCommunicator sc = new SerialCommunicator();
+            if (sc.getMovingHardwareType() == sc.HW_TYPE_ARDUINO_2WD)
+                this.serialCommunicator = (Arduino2WDSerialCommunicator)sc;
+            //Add new hardware here
 
-            PriorityBlockingQueue<SerialCommand> commandQueue = new PriorityBlockingQueue<>();
+            //servletContext.setAttribute("SerialCommunicator", this.serialCommunicator);
+
+            PriorityBlockingQueue<VectorCommand> commandQueue = new PriorityBlockingQueue<>();
             servletContext.setAttribute("CommandQueue", commandQueue);
 
             this.serialService = new SerialService(this.serialCommunicator, commandQueue);
             Thread serialServiceThread = new Thread(this.serialService);
             serialServiceThread.start();
-        } catch (CommPortException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (CommPortException | UnsupportedHardwareException e) {
+            e.printStackTrace();
         }
 
 

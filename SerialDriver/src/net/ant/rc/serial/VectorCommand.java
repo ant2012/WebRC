@@ -7,13 +7,13 @@ package net.ant.rc.serial;
  * Time: 0:09
  * To change this template use File | Settings | File Templates.
  */
-public class SerialCommand implements Comparable{
+public class VectorCommand implements Comparable{
     final public String commandType;
     final public int x;
     final public int y;
     final public long timeMillis;
 
-    public SerialCommand(String commandType, int x, int y, long timeMillis) {
+    public VectorCommand(String commandType, int x, int y, long timeMillis) {
         this.commandType = commandType;
         this.x = x;
         this.y = y;
@@ -24,7 +24,7 @@ public class SerialCommand implements Comparable{
     public int compareTo(Object o) {
         //this > object => 1
         int result;
-        SerialCommand obj = (SerialCommand)o;
+        VectorCommand obj = (VectorCommand)o;
         if (this.timeMillis == obj.timeMillis){
             result = 0;
         } else {

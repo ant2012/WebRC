@@ -1,4 +1,4 @@
-package net.ant.rc.serial;
+package net.ant.rc.serial.exception;
 
 /**
  * Created with IntelliJ IDEA.
@@ -9,7 +9,7 @@ package net.ant.rc.serial;
  */
 public class CommPortException extends Exception{
         String message = null;
-        CommPortException(String message){
+        public CommPortException(String message){
             this.message = message;
         }
         public String toString(){

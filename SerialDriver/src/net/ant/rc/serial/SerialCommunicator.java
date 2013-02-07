@@ -1,6 +1,8 @@
 package net.ant.rc.serial;
 
 import gnu.io.*;
+import net.ant.rc.serial.exception.CommPortException;
+import net.ant.rc.serial.exception.UnsupportedHardwareException;
 
 import java.io.*;
 import java.util.Date;
@@ -15,19 +17,28 @@ import java.util.TooManyListenersException;
  * Time: 2:21
  * To change this template use File | Settings | File Templates.
  */
-public class SerialCommunicator implements SerialPortEventListener {
-    boolean isReadComplete = false;
-    byte[] receivedData = new byte[200];
-    int receivedCount = 0;
+public class SerialCommunicator implements SerialPortEventListener{
+    public final int HW_TYPE_ARDUINO_2WD = 1;
 
-    SerialPort serialPort = null;
-    InputStream in = null;
-    OutputStream out = null;
+    private boolean isReadComplete = false;
+    private byte[] receivedData = new byte[200];
+    private int receivedCount = 0;
 
-    final static int NEW_LINE_ASCII = 10;
-    final static int TIMEOUT = 5000;
+    private SerialPort serialPort = null;
+    private InputStream in = null;
+    private OutputStream out = null;
 
-    public SerialCommunicator() throws CommPortException {
+    final private int NEW_LINE_ASCII = 10;
+    final private int TIMEOUT = 5000;
+    final private String configFileName = "arduino.conf";
+
+    public int getMovingHardwareType() {
+        return movingHardwareType;
+    }
+
+    private int movingHardwareType = 0;
+
+    public SerialCommunicator() throws CommPortException, UnsupportedHardwareException {
         //Trying to use configuration file "arduino.conf"
         try {
             String portName = getConfiguredPortName();
@@ -39,6 +50,18 @@ public class SerialCommunicator implements SerialPortEventListener {
             e.printStackTrace();
         }
         detectCommPort();
+        getHardwareType();
+    }
+
+    private void getHardwareType() throws CommPortException, UnsupportedHardwareException {
+        String result = sendCommand("hardware");
+        if (result.equalsIgnoreCase("Arduino2WD"))
+            movingHardwareType = HW_TYPE_ARDUINO_2WD;
+        //Add new platform here
+
+        if (movingHardwareType == 0)
+            throw new UnsupportedHardwareException(result);
+        System.out.println("Hardware detected: " + result);
     }
 
     private void initStreams() throws IOException {
@@ -52,7 +75,7 @@ public class SerialCommunicator implements SerialPortEventListener {
         try {
             Thread.sleep(TIMEOUT);
         } catch (InterruptedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
     }
 
@@ -60,11 +83,19 @@ public class SerialCommunicator implements SerialPortEventListener {
         System.out.println("Searching for port name configuration..");
         Properties config = new Properties();
         String commPortName = null;
+        InputStream in = null;
+        // First try loading from the current directory
         try {
-            //InputStream in = new FileInputStream("arduino.conf");
-            InputStream in = this.getClass().getClassLoader()
-                    .getResourceAsStream("../../arduino.conf");
-            if (in == null) in = new FileInputStream("arduino.conf");
+            in = new FileInputStream(configFileName);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (in == null){
+                // Try loading from classpath related project root
+                in = this.getClass().getClassLoader()
+                        .getResourceAsStream("../../" +configFileName);
+            }
             config.load(in);
             in.close();
             commPortName = config.getProperty("CommPortName");
@@ -73,7 +104,7 @@ public class SerialCommunicator implements SerialPortEventListener {
         }
 
         if (commPortName==null){
-            throw new CommPortException("CommPortName is not found in arduino.conf file!");
+            throw new CommPortException("CommPortName is not found in " + configFileName + " file!");
         }
         return commPortName;
     }
@@ -131,7 +162,7 @@ public class SerialCommunicator implements SerialPortEventListener {
         }
     }
 
-    public String checkMessage() {
+    private String checkMessage() {
         readSomeBytesFromInput();
         String message = null;
         if (isReadComplete) {
@@ -143,7 +174,7 @@ public class SerialCommunicator implements SerialPortEventListener {
         return message;
     }
 
-    public void sendMessage(String message){
+    private void sendMessage(String message){
         try {
             out.write((message + "\n").getBytes());
         } catch (IOException e) {
@@ -151,7 +182,7 @@ public class SerialCommunicator implements SerialPortEventListener {
         }
     }
 
-    public String commandWithResult(String command) throws CommPortException {
+    public String sendCommand(String command) throws CommPortException {
         //System.out.println(command);
         this.sendMessage(command);
 
@@ -164,49 +195,6 @@ public class SerialCommunicator implements SerialPortEventListener {
             }
         }
         return message;
-    }
-
-    int maxClientValue = 0; // X or Y
-    int maxSpeed = 0; // speed is c = sqrt(x2+y2)
-
-    public String digitalCommandWithResult(int x, int y) throws CommPortException {
-        String command = generate2WDCommand(x, -y);
-        return commandWithResult(command);
-    }
-
-    private String generate2WDCommand(int x, int y){
-
-        //Save max values - it is self adaptation
-        if(Math.abs(x) > this.maxClientValue)this.maxClientValue = Math.abs(x);
-        if(Math.abs(y) > this.maxClientValue)this.maxClientValue = Math.abs(y);
-        int c = (int) Math.round(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)));
-        if(c > this.maxSpeed)this.maxSpeed = c;
-
-        //Normalize speeds to range 0..255 using max value
-        c = (c==0)?0:255 * c / this.maxSpeed;
-        x = (this.maxClientValue==0)?0:255 * x / this.maxClientValue;
-        y = (this.maxClientValue==0)?0:255 * y / this.maxClientValue;
-
-        //Set direction sign
-        int sign = (y<0)?-1:1;
-        c = c * sign;
-
-        //2WD transform from joystic Vector to wheel's speed
-        int  leftWheelSpeed = 0;
-        int rightWheelSpeed = 0;
-
-        // (I) & (IV) quadrants
-        if (x >= 0) {
-            leftWheelSpeed = c;
-            rightWheelSpeed = y;
-        }
-        // (II) & (III) quadrants
-        if (x < 0) {
-            rightWheelSpeed = c;
-            leftWheelSpeed = y;
-        }
-        //Format is "Digital:leftWheelSpeed,rightWheelSpeed"
-        return "Digital:" + leftWheelSpeed + "," + rightWheelSpeed;
     }
 
     public void disconnect()
@@ -225,46 +213,62 @@ public class SerialCommunicator implements SerialPortEventListener {
         }
     }
 
-    public void detectCommPort() throws CommPortException {
+    private void detectCommPort() throws CommPortException {
         if (this.serialPort != null)return;
         System.out.println("Trying to detect Arduino on any serial port..");
         Enumeration thePorts = CommPortIdentifier.getPortIdentifiers();
         while (thePorts.hasMoreElements()) {
             CommPortIdentifier commPortIdentifier = (CommPortIdentifier) thePorts.nextElement();
+            String portName = commPortIdentifier.getName();
             if (commPortIdentifier.getPortType() != CommPortIdentifier.PORT_SERIAL)continue;
             System.out.println("Trying to open port " + commPortIdentifier.getName() + " as Serial");
             try {
                 openSerialPort(commPortIdentifier);
             } catch (PortInUseException | CommPortException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();
             } catch (UnsupportedCommOperationException e) {
                 this.serialPort = null;
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();
             }
             if (this.serialPort == null)continue;
 
+            System.out.println("Port " + portName + " is available. Trying to work with it as Arduino.");
             //Check port by querying Firmware version
             try {
                 initStreams();
                 initListener();
-                getFirmwareVersion(commPortIdentifier.getName());
-                saveDetectedPortConfiguration(commPortIdentifier.getName());
+                getFirmwareVersion(portName);
+                saveDetectedPortConfiguration(portName);
+                break;
             } catch (Exception e) {
                 this.serialPort.close();
                 this.serialPort = null;
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();
             }
         }
         if (this.serialPort == null) throw new CommPortException("Unable to detect Arduino on any COM port");
     }
 
     private void getFirmwareVersion(String portName) throws CommPortException {
-        String fwVersion = commandWithResult("version");
+        String fwVersion = sendCommand("version");
+        if (fwVersion == null || !fwVersion.startsWith("Arduino"))
+            throw new CommPortException("There is no Arduino on " + portName);
         System.out.println("Port " + portName + " looks like her magesty Arduino!");
         System.out.println("Detected: " + fwVersion);
     }
 
     private void saveDetectedPortConfiguration(String portName) {
-        //TODO: Save detected portName to file "arduino.conf"
+        //TODO: Test this method
+        System.out.println("Saving " + portName + " to configuration file for future runs");
+        Properties config = new Properties();
+        config.setProperty("CommPortName", portName);
+        FileOutputStream out;
+        try {
+            out = new FileOutputStream(configFileName);
+            config.store(out, "Automatically detected port configuration");
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,5 +1,7 @@
 package net.ant.rc.serial;
 
+import net.ant.rc.serial.exception.CommPortException;
+
 import java.util.concurrent.PriorityBlockingQueue;
 
 /**
@@ -11,10 +13,10 @@ import java.util.concurrent.PriorityBlockingQueue;
  */
 public class SerialService implements Runnable {
 
-    //private final long MAX_LAG_AALOWED = 2000;
-    private final SerialCommunicator serialCommunicator;
-    private final PriorityBlockingQueue<SerialCommand> commandQueue;
-    private SerialCommand lastCommand = new SerialCommand("Digital", 0, 0, 0);
+    private final long MAX_QUEUE_SIZE = 20;
+    private final SerialCommunicatorInterface serialCommunicator;
+    private final PriorityBlockingQueue<VectorCommand> commandQueue;
+    private VectorCommand lastCommand = new VectorCommand("Digital", 0, 0, 0);
     private boolean serviceStopped = false;
 
     @Override
@@ -22,34 +24,31 @@ public class SerialService implements Runnable {
 
         while(!this.serviceStopped){
             try {
-                SerialCommand serialCommand = commandQueue.take();
+                VectorCommand vectorCommand = this.commandQueue.take();
+                int queueSize = this.commandQueue.size();
 
                 //Bypass the entries older then last sended
-                if (serialCommand.timeMillis < lastCommand.timeMillis){
-                    System.out.println("Bypass1 value of [" + serialCommand.x + "," + serialCommand.y + "] for " + serialCommand.timeMillis + " < " + lastCommand.timeMillis);
+                if (vectorCommand.timeMillis < lastCommand.timeMillis){
+                    System.out.println("Bypass1 value of [" + vectorCommand.x + "," + vectorCommand.y + "] for " + vectorCommand.timeMillis + " < " + lastCommand.timeMillis);
                     continue;
                 }
-                /* incorrect algorithm!!!
-                if (lastCommand.timeMillis != 0 &&
-                        serialCommand.timeMillis - lastCommand.timeMillis > MAX_LAG_AALOWED){
-
-                    System.out.println("Bypass2 value of [" + serialCommand.x + "," + serialCommand.y + "] for " + serialCommand.timeMillis + " - " + lastCommand.timeMillis + ">" + MAX_LAG_AALOWED);
-                    continue;
-                }
-                */
 
                 //Bypass the same command
-                if (lastCommand.x == serialCommand.x &&
-                    lastCommand.y == serialCommand.y){
-                    System.out.println("Bypass3 value of [" + serialCommand.x + "," + serialCommand.y + "] already sent");
+                if (lastCommand.x == vectorCommand.x &&
+                    lastCommand.y == vectorCommand.y){
+                    System.out.println("Bypass2 value of [" + vectorCommand.x + "," + vectorCommand.y + "] already sent");
                     continue;
                 }
 
-                lastCommand = serialCommand;
+                //Bypass entries if queue is too long
+                if (queueSize > MAX_QUEUE_SIZE){
+                    System.out.println("Bypass3 value of [" + vectorCommand.x + "," + vectorCommand.y + "] for " + queueSize + ">" + MAX_QUEUE_SIZE);
+                    continue;
+                }
 
-                //Bypass enries older then the LAG bound
-                if (serialCommand.commandType.equals("Digital")){
-                    System.out.println(serialCommunicator.digitalCommandWithResult(serialCommand.x, serialCommand.y));
+                if (vectorCommand.commandType.equals("Digital")){
+                    System.out.println(serialCommunicator.sendVectorCommand(vectorCommand.x, vectorCommand.y));
+                    lastCommand = vectorCommand;
                 }
             } catch (InterruptedException | CommPortException e) {
                 e.printStackTrace();
@@ -57,7 +56,7 @@ public class SerialService implements Runnable {
         }
    }
 
-    public SerialService(SerialCommunicator serialCommunicator, PriorityBlockingQueue<SerialCommand> commandQueue) {
+    public SerialService(SerialCommunicatorInterface serialCommunicator, PriorityBlockingQueue<VectorCommand> commandQueue) {
         this.serialCommunicator = serialCommunicator;
         this.commandQueue = commandQueue;
     }
