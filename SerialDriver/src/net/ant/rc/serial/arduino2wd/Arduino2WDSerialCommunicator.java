@@ -1,5 +1,8 @@
-package net.ant.rc.serial;
+package net.ant.rc.serial.arduino2wd;
 
+import net.ant.rc.serial.EachWheelCommand;
+import net.ant.rc.serial.SerialCommunicator;
+import net.ant.rc.serial.SerialCommunicatorInterface;
 import net.ant.rc.serial.exception.CommPortException;
 import net.ant.rc.serial.exception.UnsupportedHardwareException;
 

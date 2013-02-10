@@ -1,4 +1,4 @@
-import net.ant.rc.serial.Arduino2WDSerialCommunicator;
+import net.ant.rc.serial.arduino2wd.Arduino2WDSerialCommunicator;
 import net.ant.rc.serial.exception.CommPortException;
 import net.ant.rc.serial.exception.UnsupportedHardwareException;
 

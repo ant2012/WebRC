@@ -1,4 +1,6 @@
-package net.ant.rc.serial;
+package net.ant.rc.serial.arduino2wd;
+
+import net.ant.rc.serial.EachWheelCommand;
 
 /**
  * Created with IntelliJ IDEA.

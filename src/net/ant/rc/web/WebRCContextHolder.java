@@ -7,6 +7,7 @@ package net.ant.rc.web; /**
  */
 
 import net.ant.rc.serial.*;
+import net.ant.rc.serial.arduino2wd.Arduino2WDSerialCommunicator;
 import net.ant.rc.serial.exception.CommPortException;
 import net.ant.rc.serial.exception.UnsupportedHardwareException;
 
@@ -40,15 +41,13 @@ public class WebRCContextHolder implements ServletContextListener,
          You can initialize servlet context related data here.
       */
         ServletContext servletContext = sce.getServletContext();
-        String realPath = servletContext.getRealPath("/");
 
         try {
             //Выбор конкретного драйвера
-            SerialCommunicator sc = new SerialCommunicator(realPath);
-            sc.disconnect();
-            if (sc.getMovingHardwareType() == sc.HW_TYPE_ARDUINO_2WD)
+            SerialCommunicator sc = new SerialCommunicator();
+            //sc.disconnect();
+            if (sc.getChassisType() == sc.CHASSIS_TYPE_ARDUINO_2WD)
                 this.serialCommunicator = new Arduino2WDSerialCommunicator(sc);
-                //this.serialCommunicator = (Arduino2WDSerialCommunicator)sc;
             //Add new hardware here
 
             //servletContext.setAttribute("SerialCommunicator", this.serialCommunicator);
