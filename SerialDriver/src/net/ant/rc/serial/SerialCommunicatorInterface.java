@@ -9,7 +9,7 @@ import net.ant.rc.serial.exception.CommPortException;
  * Time: 12:23
  * To change this template use File | Settings | File Templates.
  */
-public interface SerialCommunicatorInterface {
+public interface SerialCommunicatorInterface{
     String sendVectorCommand(int x, int y) throws CommPortException;
     String sendEachWheelCommand(EachWheelCommand eachWheelCommand) throws CommPortException;
     void disconnect();

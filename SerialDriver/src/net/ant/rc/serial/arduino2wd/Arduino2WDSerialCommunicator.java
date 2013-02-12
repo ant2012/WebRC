@@ -3,6 +3,7 @@ package net.ant.rc.serial.arduino2wd;
 import net.ant.rc.serial.EachWheelCommand;
 import net.ant.rc.serial.SerialCommunicator;
 import net.ant.rc.serial.SerialCommunicatorInterface;
+import net.ant.rc.serial.SerialHardwareDetector;
 import net.ant.rc.serial.exception.CommPortException;
 import net.ant.rc.serial.exception.UnsupportedHardwareException;
 
@@ -22,8 +23,8 @@ public class Arduino2WDSerialCommunicator extends SerialCommunicator implements 
         super(serialCommunicator);
     }
 
-    public Arduino2WDSerialCommunicator() throws UnsupportedHardwareException, CommPortException {
-        super();
+    public Arduino2WDSerialCommunicator(SerialHardwareDetector serialHardwareDetector) throws UnsupportedHardwareException, CommPortException {
+        super(serialHardwareDetector);
     }
 
     @Override
