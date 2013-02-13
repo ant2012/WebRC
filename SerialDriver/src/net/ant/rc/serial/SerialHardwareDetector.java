@@ -1,7 +1,7 @@
 package net.ant.rc.serial;
 
 import gnu.io.*;
-import net.ant.rc.serial.arduino2wd.Arduino2WDSerialCommunicator;
+import net.ant.rc.serial.arduino2wd.Arduino2WDSerialDriver;
 import net.ant.rc.serial.exception.CommPortException;
 import net.ant.rc.serial.exception.UnsupportedHardwareException;
 
@@ -20,7 +20,7 @@ import java.util.TooManyListenersException;
 public class SerialHardwareDetector {
     public static final int CHASSIS_TYPE_UNDEFINED = 0;
     public static final int CHASSIS_TYPE_ARDUINO_2WD = 1;
-    private static final int COMM_OPEN_TIMEOUT = 2000;
+    public static final int COMM_OPEN_TIMEOUT = 2000;
     private static final String configFileName = "serial.conf";
 
     private final String workingPath;
@@ -49,7 +49,13 @@ public class SerialHardwareDetector {
         return serialCommunicator;
     }
 
-    private SerialCommunicator serialCommunicator;
+    private final SerialCommunicator serialCommunicator;
+
+    public SerialDriver getSerialDriver() {
+        return serialDriver;
+    }
+
+    private SerialDriver serialDriver;
 
     public SerialHardwareDetector(String workingPath) throws CommPortException, UnsupportedHardwareException {
         this.serialCommunicator = new SerialCommunicator(this);
@@ -65,7 +71,7 @@ public class SerialHardwareDetector {
         this.chassisType = detectChassisType();
 
         if (this.chassisType == this.CHASSIS_TYPE_ARDUINO_2WD)
-            this.serialCommunicator = new Arduino2WDSerialCommunicator((SerialCommunicator) this.serialCommunicator);
+            this.serialDriver = new Arduino2WDSerialDriver(this);
         //Add new hardware here
 
     }
@@ -140,7 +146,7 @@ public class SerialHardwareDetector {
             openSerialPort(commPortIdentifier);
             System.out.println("Port " + portName + " is available. Trying to work with it as Arduino.");
             initStreams();
-            ((SerialCommunicator)serialCommunicator).initListener();
+            this.serialCommunicator.initListener();
         } catch (UnsupportedCommOperationException | TooManyListenersException | IOException e) {
             if (serialPort != null)serialPort.close();
             clearPortAttributes();
@@ -178,7 +184,7 @@ public class SerialHardwareDetector {
     private void checkFirmwareVersion() throws CommPortException {
         String fwVersion = null;
         try {
-            fwVersion = ((SerialCommunicator)serialCommunicator).sendCommand("version");
+            fwVersion = this.serialCommunicator.sendCommand("version");
         } catch (CommPortException e) {
             e.printStackTrace();
         }
@@ -224,7 +230,7 @@ public class SerialHardwareDetector {
                 saveDetectedPortConfiguration();
                 break;
             } catch (CommPortException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();
             }
         }
         if (serialPort == null) throw new CommPortException("Unable to detect Arduino on any COM port");
@@ -247,7 +253,7 @@ public class SerialHardwareDetector {
     }
 
     private int detectChassisType() throws CommPortException, UnsupportedHardwareException {
-        String result = ((SerialCommunicator)serialCommunicator).sendCommand("hardware");
+        String result = serialCommunicator.sendCommand("hardware");
         int chassisType = CHASSIS_TYPE_UNDEFINED;
         if (result.startsWith("Arduino2WD"))
             chassisType = CHASSIS_TYPE_ARDUINO_2WD;

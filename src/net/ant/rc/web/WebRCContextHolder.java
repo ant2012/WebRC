@@ -24,7 +24,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 public class WebRCContextHolder implements ServletContextListener,
         HttpSessionListener, HttpSessionAttributeListener {
 
-    SerialCommunicatorInterface serialCommunicator;
+    SerialHardwareDetector serialHardwareDetector;
     SerialService serialService;
 
     // Public constructor is required by servlet spec
@@ -45,15 +45,13 @@ public class WebRCContextHolder implements ServletContextListener,
             String workingPath = servletContext.getRealPath("/WEB-INF/classes/.");
             workingPath = workingPath.substring(0, workingPath.length()-1);
 
-            SerialHardwareDetector serialHardwareDetector = new SerialHardwareDetector(workingPath);
-            serialCommunicator = serialHardwareDetector.getSerialCommunicator();
-            //sc.disconnect();
-            //servletContext.setAttribute("SerialCommunicator", this.serialCommunicator);
+            this.serialHardwareDetector = new SerialHardwareDetector(workingPath);
+            SerialDriver serialDriver = serialHardwareDetector.getSerialDriver();
 
             PriorityBlockingQueue<VectorCommand> commandQueue = new PriorityBlockingQueue<>();
             servletContext.setAttribute("CommandQueue", commandQueue);
 
-            this.serialService = new SerialService(this.serialCommunicator, commandQueue);
+            this.serialService = new SerialService(serialDriver, commandQueue);
             Thread serialServiceThread = new Thread(this.serialService);
             serialServiceThread.start();
         } catch (CommPortException | UnsupportedHardwareException e) {
@@ -68,8 +66,8 @@ public class WebRCContextHolder implements ServletContextListener,
          (the Web application) is undeployed or 
          Application Server shuts down.
       */
-        if(this.serialCommunicator!=null)
-            this.serialCommunicator.disconnect();
+        if(this.serialHardwareDetector !=null)
+            this.serialHardwareDetector.disconnect();
         if(this.serialService != null)
             this.serialService.stop();
     }

@@ -3,6 +3,7 @@ package net.ant.rc.serial;
 import net.ant.rc.serial.exception.CommPortException;
 
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,9 +15,11 @@ import java.util.concurrent.PriorityBlockingQueue;
 public class SerialService implements Runnable {
 
     private final long MAX_QUEUE_SIZE = 20;
-    private final SerialCommunicatorInterface serialCommunicator;
+    private final long POLL_WAIT_TIMEOUT = 3000;
+    private final SerialDriver serialDriver;
     private final PriorityBlockingQueue<VectorCommand> commandQueue;
-    private VectorCommand lastCommand = new VectorCommand("Digital", 0, 0, 0);
+    private final VectorCommand STOP = VectorCommand.STOP();
+    private VectorCommand lastCommand = STOP;
     private boolean serviceStopped = false;
 
     @Override
@@ -24,7 +27,12 @@ public class SerialService implements Runnable {
 
         while(!this.serviceStopped){
             try {
-                VectorCommand vectorCommand = this.commandQueue.take();
+                VectorCommand vectorCommand = this.commandQueue.poll(POLL_WAIT_TIMEOUT, TimeUnit.MILLISECONDS);
+                //If timeout was expired
+                if (vectorCommand == null) {
+                    //if last command was STOP then continue waiting, else go to send STOP
+                    if (lastCommand.equals(STOP)) continue;
+                }
                 int queueSize = this.commandQueue.size();
 
                 //Bypass the entries older then last sended
@@ -47,7 +55,7 @@ public class SerialService implements Runnable {
                 }
 
                 if (vectorCommand.commandType.equals("Digital")){
-                    System.out.println(serialCommunicator.sendVectorCommand(vectorCommand.x, vectorCommand.y));
+                    System.out.println(serialDriver.sendVectorCommand(vectorCommand.x, vectorCommand.y));
                     lastCommand = vectorCommand;
                 }
             } catch (InterruptedException | CommPortException e) {
@@ -56,12 +64,13 @@ public class SerialService implements Runnable {
         }
    }
 
-    public SerialService(SerialCommunicatorInterface serialCommunicator, PriorityBlockingQueue<VectorCommand> commandQueue) {
-        this.serialCommunicator = serialCommunicator;
+    public SerialService(SerialDriver serialDriver, PriorityBlockingQueue<VectorCommand> commandQueue) {
+        this.serialDriver = serialDriver;
         this.commandQueue = commandQueue;
     }
 
     public void stop(){
         this.serviceStopped = true;
+        this.serialDriver.disconnect();
     }
 }

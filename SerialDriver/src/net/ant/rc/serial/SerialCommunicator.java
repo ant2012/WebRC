@@ -23,17 +23,6 @@ public class SerialCommunicator implements SerialPortEventListener{
     private int receivedCount = 0;
     private final SerialHardwareDetector serialHardwareDetector;
 
-    //Constructor for cast to subclasses
-    public SerialCommunicator(SerialCommunicator sc) {
-        this.serialHardwareDetector = sc.serialHardwareDetector;
-        try {
-            //Reset listener from super to subclass
-            initListener();
-        } catch (TooManyListenersException e) {
-            e.printStackTrace();
-        }
-    }
-
     public SerialCommunicator(SerialHardwareDetector serialHardwareDetector) {
         this.serialHardwareDetector = serialHardwareDetector;
     }
@@ -106,9 +95,5 @@ public class SerialCommunicator implements SerialPortEventListener{
             }
         }
         return message;
-    }
-
-    public void disconnect(){
-        this.serialHardwareDetector.disconnect();
     }
 }

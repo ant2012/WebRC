@@ -32,4 +32,15 @@ public class VectorCommand implements Comparable{
         }
         return result;
     }
+
+    @Override
+    public boolean equals(Object o){
+        if (!(o instanceof VectorCommand))return false;
+        VectorCommand v = (VectorCommand)o;
+        return (v.x == this.x && v.y == this.y);
+    }
+
+    public static VectorCommand STOP(){
+        return new VectorCommand("Digital", 0, 0, 0);
+    }
 }

@@ -1,5 +1,5 @@
+import net.ant.rc.serial.SerialDriver;
 import net.ant.rc.serial.SerialHardwareDetector;
-import net.ant.rc.serial.arduino2wd.Arduino2WDSerialCommunicator;
 import net.ant.rc.serial.exception.CommPortException;
 import net.ant.rc.serial.exception.UnsupportedHardwareException;
 
@@ -12,17 +12,17 @@ public class Main {
         String workingPath = f.getAbsolutePath();
         workingPath = workingPath.substring(0, workingPath.length()-1);
 
-        Arduino2WDSerialCommunicator serialCommunicator = null;
+        SerialDriver serialDriver = null;
         try {
             SerialHardwareDetector serialHardwareDetector = new SerialHardwareDetector(workingPath);
-            serialCommunicator = (Arduino2WDSerialCommunicator) serialHardwareDetector.getSerialCommunicator();
+            serialDriver = serialHardwareDetector.getSerialDriver();
 
-            System.out.println(serialCommunicator.sendVectorCommand(-100, 0));
+            System.out.println(serialDriver.sendVectorCommand(0, 0));
         } catch (CommPortException | UnsupportedHardwareException e) {
             e.printStackTrace();
         } finally {
-            if (serialCommunicator != null)
-                serialCommunicator.disconnect();
+            if (serialDriver != null)
+                serialDriver.disconnect();
         }
     }
 }

@@ -1,11 +1,9 @@
 package net.ant.rc.serial.arduino2wd;
 
 import net.ant.rc.serial.EachWheelCommand;
-import net.ant.rc.serial.SerialCommunicator;
-import net.ant.rc.serial.SerialCommunicatorInterface;
+import net.ant.rc.serial.SerialDriver;
 import net.ant.rc.serial.SerialHardwareDetector;
 import net.ant.rc.serial.exception.CommPortException;
-import net.ant.rc.serial.exception.UnsupportedHardwareException;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,29 +12,25 @@ import net.ant.rc.serial.exception.UnsupportedHardwareException;
  * Time: 11:03
  * To change this template use File | Settings | File Templates.
  */
-public class Arduino2WDSerialCommunicator extends SerialCommunicator implements SerialCommunicatorInterface {
+public class Arduino2WDSerialDriver extends SerialDriver {
 
     int maxClientValue = 0; // X or Y
     int maxSpeed = 0; // speed is c = sqrt(x2+y2)
 
-    public Arduino2WDSerialCommunicator(SerialCommunicator serialCommunicator) {
-        super(serialCommunicator);
-    }
-
-    public Arduino2WDSerialCommunicator(SerialHardwareDetector serialHardwareDetector) throws UnsupportedHardwareException, CommPortException {
+    public Arduino2WDSerialDriver(SerialHardwareDetector serialHardwareDetector) {
         super(serialHardwareDetector);
     }
 
     @Override
     public String sendVectorCommand(int x, int y) throws CommPortException {
         String command = generateDigitalCommand(x, -y);
-        return sendCommand(command);
+        return this.serialCommunicator.sendCommand(command);
     }
 
     @Override
     public String sendEachWheelCommand(EachWheelCommand eachWheelCommand) throws CommPortException {
         Arduino2WDEachWheelCommand arduino2WDEachWheelCommand = (Arduino2WDEachWheelCommand)eachWheelCommand;
-        return sendCommand(generateDigitalCommand(arduino2WDEachWheelCommand));
+        return this.serialCommunicator.sendCommand(generateDigitalCommand(arduino2WDEachWheelCommand));
     }
 
     private String generateDigitalCommand(Arduino2WDEachWheelCommand arduino2WDEachWheelCommand) {
@@ -76,10 +70,5 @@ public class Arduino2WDSerialCommunicator extends SerialCommunicator implements 
         }
         //Format is "Digital:leftWheelSpeed,rightWheelSpeed"
         return generateDigitalCommand(new Arduino2WDEachWheelCommand(leftWheelSpeed, rightWheelSpeed));
-    }
-
-    @Override
-    public void disconnect(){
-        super.disconnect();
     }
 }
