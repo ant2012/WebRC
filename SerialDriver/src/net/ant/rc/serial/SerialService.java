@@ -18,7 +18,7 @@ public class SerialService implements Runnable {
     private final long POLL_WAIT_TIMEOUT = 3000;
     private final SerialDriver serialDriver;
     private final PriorityBlockingQueue<Command> commandQueue;
-    private Command STOP = TractorCommand.STOP();
+    private Command STOP = TractorCommand.STOP(0);
     private Command lastCommand = STOP;
     private boolean serviceStopped = false;
     private int queueSize;
@@ -34,7 +34,8 @@ public class SerialService implements Runnable {
                 if (command == null) {
                     //if last command was STOP then continue waiting, else go to send STOP
                     if (lastCommand.equals(STOP)) continue;
-                    command = TractorCommand.STOP();
+                    //TODO: Check stop on client disconnect
+                    command = TractorCommand.STOP(lastCommand.timeMillis);
                 }
                 queueSize = this.commandQueue.size();
 
@@ -42,12 +43,12 @@ public class SerialService implements Runnable {
                 TractorCommand tractorCommand = null;
                 String valueForLog = "";
                 if (command instanceof VectorCommand) {
-                    STOP = VectorCommand.STOP();
+                    STOP = VectorCommand.STOP(0);
                     vectorCommand = (VectorCommand) command;
                     valueForLog = vectorCommand.x + "," + vectorCommand.y;
                 }
                 if (command instanceof TractorCommand) {
-                    STOP = TractorCommand.STOP();
+                    STOP = TractorCommand.STOP(0);
                     tractorCommand = (TractorCommand) command;
                     valueForLog = tractorCommand.left + "," + tractorCommand.right;
                 }

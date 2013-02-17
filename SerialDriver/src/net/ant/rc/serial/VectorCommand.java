@@ -17,8 +17,8 @@ public class VectorCommand extends Command {
         this.y = y;
     }
 
-    public static VectorCommand STOP() {
-        return new VectorCommand("Digital", 0, 0, 0);
+    public static VectorCommand STOP(long timeMillis) {
+        return new VectorCommand("Digital", 0, 0, timeMillis);
     }
 
     @Override

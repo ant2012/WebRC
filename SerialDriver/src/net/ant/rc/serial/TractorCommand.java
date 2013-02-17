@@ -17,8 +17,8 @@ public class TractorCommand extends Command {
         this.right = right;
     }
 
-    public static TractorCommand STOP() {
-        return new TractorCommand("Digital", 0, 0, 0);
+    public static TractorCommand STOP(long timeMillis) {
+        return new TractorCommand("Digital", 0, 0, timeMillis);
     }
 
     @Override
