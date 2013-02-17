@@ -14,8 +14,8 @@ import net.ant.rc.serial.exception.CommPortException;
  */
 public class Arduino2WDSerialDriver extends SerialDriver {
 
-    int maxClientValue = 0; // X or Y
-    int maxSpeed = 0; // speed is c = sqrt(x2+y2)
+    int maxClientValue = 100;
+    int maxSpeed = 255;
 
     public Arduino2WDSerialDriver(SerialHardwareDetector serialHardwareDetector) {
         super(serialHardwareDetector);
@@ -25,6 +25,15 @@ public class Arduino2WDSerialDriver extends SerialDriver {
     public String sendVectorCommand(int x, int y) throws CommPortException {
         String command = generateDigitalCommand(x, -y);
         return this.serialCommunicator.sendCommand(command);
+    }
+
+    @Override
+    public String sendTractorCommand(int left, int right) throws CommPortException {
+        int leftSign  = (left <0)?-1:1;
+        int rightSign = (right<0)?-1:1;
+        int leftWheelSpeed  = (Math.abs(left) >=this.maxClientValue)?leftSign *this.maxSpeed:left /this.maxClientValue*this.maxSpeed;
+        int rightWheelSpeed = (Math.abs(right)>=this.maxClientValue)?rightSign*this.maxSpeed:right/this.maxClientValue*this.maxSpeed;
+        return this.serialCommunicator.sendCommand(generateDigitalCommand(new Arduino2WDEachWheelCommand(-leftWheelSpeed, -rightWheelSpeed)));
     }
 
     @Override
@@ -40,18 +49,23 @@ public class Arduino2WDSerialDriver extends SerialDriver {
     private String generateDigitalCommand(int x, int y){
 
         //Save max values - it is self adaptation
-        if(Math.abs(x) > this.maxClientValue)this.maxClientValue = Math.abs(x);
-        if(Math.abs(y) > this.maxClientValue)this.maxClientValue = Math.abs(y);
+        //if(Math.abs(x) > this.maxClientValue)this.maxClientValue = Math.abs(x);
+        //if(Math.abs(y) > this.maxClientValue)this.maxClientValue = Math.abs(y);
         int c = (int) Math.round(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)));
-        if(c > this.maxSpeed)this.maxSpeed = c;
+        //if(c > this.maxSpeed)this.maxSpeed = c;
 
         //Normalize speeds to range 0..255 using max value
-        c = (c==0)?0:255 * c / this.maxSpeed;
-        x = (this.maxClientValue==0)?0:255 * x / this.maxClientValue;
-        y = (this.maxClientValue==0)?0:255 * y / this.maxClientValue;
+        c = (c>=this.maxClientValue)?this.maxSpeed:this.maxSpeed * c / this.maxClientValue;
+        //x = (this.maxClientValue<=x)?this.maxSpeed:this.maxSpeed * x / this.maxClientValue;
+        int sign = (y<0)?-1:1;
+
+
+        y = (y==0)?0:this.maxSpeed/(Math.abs(x/y)+1);
+
+        y = (this.maxSpeed > y) ? y : this.maxSpeed;
+        y = sign * y;
 
         //Set direction sign
-        int sign = (y<0)?-1:1;
         c = c * sign;
 
         //2WD transform from joystic Vector to wheel's speed

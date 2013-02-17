@@ -7,30 +7,18 @@ package net.ant.rc.serial;
  * Time: 0:09
  * To change this template use File | Settings | File Templates.
  */
-public class VectorCommand implements Comparable{
-    final public String commandType;
+public class VectorCommand extends Command {
     final public int x;
     final public int y;
-    final public long timeMillis;
 
     public VectorCommand(String commandType, int x, int y, long timeMillis) {
-        this.commandType = commandType;
+        super(commandType, timeMillis);
         this.x = x;
         this.y = y;
-        this.timeMillis = timeMillis;
     }
 
-    @Override
-    public int compareTo(Object o) {
-        //this > object => 1
-        int result;
-        VectorCommand obj = (VectorCommand)o;
-        if (this.timeMillis == obj.timeMillis){
-            result = 0;
-        } else {
-            result = (this.timeMillis > obj.timeMillis)?1:-1;
-        }
-        return result;
+    public static VectorCommand STOP() {
+        return new VectorCommand("Digital", 0, 0, 0);
     }
 
     @Override
@@ -40,7 +28,4 @@ public class VectorCommand implements Comparable{
         return (v.x == this.x && v.y == this.y);
     }
 
-    public static VectorCommand STOP(){
-        return new VectorCommand("Digital", 0, 0, 0);
-    }
 }

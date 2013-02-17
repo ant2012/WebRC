@@ -14,6 +14,8 @@ public abstract class SerialDriver {
     private final SerialHardwareDetector serialHardwareDetector;
 
     public abstract String sendVectorCommand(int x, int y) throws CommPortException;
+    public abstract String sendTractorCommand(int left, int right) throws CommPortException;
+
     public abstract String sendEachWheelCommand(EachWheelCommand eachWheelCommand) throws CommPortException;
 
     public SerialDriver(SerialHardwareDetector serialHardwareDetector) {

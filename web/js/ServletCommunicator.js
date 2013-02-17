@@ -1,7 +1,9 @@
 ServletCommunicator = function () {
+    this.AJAX_FREQUENCY = 100;//ms
     this.x = 0;
     this.y = 0;
     this.jsonData = {};
+    this.milliseconds = 0;
 
     this.sendVector = function (vector) {
         this.x = vector.x;
@@ -10,7 +12,23 @@ ServletCommunicator = function () {
     };
 
     this.sendLastVector = function () {
-        this.createJSON();
+        this.createJSON("Vector");
+        this.jQueryAjaxPost();
+    };
+
+    this.sendTractor = function (vector) {
+        this.x = vector.x;
+        this.y = vector.y;
+        var d= new Date();
+        var milliseconds = d.getTime();
+        if((milliseconds - this.milliseconds)>this.AJAX_FREQUENCY){
+            this.milliseconds = milliseconds;
+            this.sendLastTractor();
+        }
+    };
+
+    this.sendLastTractor = function () {
+        this.createJSON("Tractor");
         this.jQueryAjaxPost();
     };
 
@@ -22,9 +40,7 @@ ServletCommunicator = function () {
         });
     };
 
-    this.createJSON = function () {
-        var d= new Date();
-        var milliseconds = d.getTime();
-        this.jsonData = {x: this.x, y: this.y, milliseconds: milliseconds};
+    this.createJSON = function (type) {
+        this.jsonData = {type: type, x: this.x, y: this.y, milliseconds: this.milliseconds};
     };
 };
