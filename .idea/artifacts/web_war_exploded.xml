@@ -12,6 +12,9 @@
       </element>
       <element id="javaee-facet-resources" facet="WebRC/web/Web" />
       <element id="file-copy" path="$PROJECT_DIR$/SerialDriver/arduino.conf" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
+      </element>
     </root>
   </artifact>
 </component>
