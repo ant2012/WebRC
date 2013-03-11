@@ -6,9 +6,13 @@ package net.ant.rc.web; /**
  * To change this template use File | Settings | File Templates.
  */
 
-import net.ant.rc.serial.*;
+import net.ant.rc.serial.Command;
+import net.ant.rc.serial.SerialDriver;
+import net.ant.rc.serial.SerialHardwareDetector;
+import net.ant.rc.serial.SerialService;
 import net.ant.rc.serial.exception.CommPortException;
 import net.ant.rc.serial.exception.UnsupportedHardwareException;
+import org.apache.log4j.Logger;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -26,9 +30,11 @@ public class WebRCContextHolder implements ServletContextListener,
 
     SerialHardwareDetector serialHardwareDetector;
     SerialService serialService;
+    private final Logger logger;
 
     // Public constructor is required by servlet spec
     public WebRCContextHolder() {
+        logger = Logger.getLogger(this.getClass());
     }
 
     // -------------------------------------------------------
@@ -48,14 +54,16 @@ public class WebRCContextHolder implements ServletContextListener,
             this.serialHardwareDetector = new SerialHardwareDetector(workingPath);
             SerialDriver serialDriver = serialHardwareDetector.getSerialDriver();
 
-            PriorityBlockingQueue<Command> commandQueue = new PriorityBlockingQueue<>();
+            PriorityBlockingQueue<Command> commandQueue = new PriorityBlockingQueue<Command>();
             servletContext.setAttribute("CommandQueue", commandQueue);
 
             this.serialService = new SerialService(serialDriver, commandQueue);
             Thread serialServiceThread = new Thread(this.serialService);
             serialServiceThread.start();
-        } catch (CommPortException | UnsupportedHardwareException e) {
-            e.printStackTrace();
+        } catch (CommPortException e) {
+            logger.error(e.getMessage(), e);
+        } catch (UnsupportedHardwareException e) {
+            logger.error(e.getMessage(), e);
         }
 
 

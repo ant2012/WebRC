@@ -4,6 +4,7 @@ import gnu.io.*;
 import net.ant.rc.serial.arduino2wd.Arduino2WDSerialDriver;
 import net.ant.rc.serial.exception.CommPortException;
 import net.ant.rc.serial.exception.UnsupportedHardwareException;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.Enumeration;
@@ -25,6 +26,7 @@ public class SerialHardwareDetector {
 
     private final String workingPath;
     private final int chassisType;
+    private final Logger logger;
 
     private String portName;
 
@@ -59,6 +61,7 @@ public class SerialHardwareDetector {
 
     public SerialHardwareDetector(String workingPath) throws CommPortException, UnsupportedHardwareException {
         this.serialCommunicator = new SerialCommunicator(this);
+        logger = Logger.getLogger(this.getClass());
         this.workingPath = workingPath;
         testWorkingPath();
 
@@ -89,7 +92,7 @@ public class SerialHardwareDetector {
             File f = new File(fileName);
             f.delete();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -100,23 +103,25 @@ public class SerialHardwareDetector {
             checkPort(commPortIdentifier);
             //Check port by querying Firmware version
             checkFirmwareVersion();
-        } catch (NoSuchPortException | CommPortException e) {
-            e.printStackTrace();
+        } catch (NoSuchPortException e) {
+            logger.error(e.getMessage(), e);
+        } catch (CommPortException e) {
+            logger.error(e.getMessage(), e);
         }
     }
 
     private void getSavedPortName() throws CommPortException {
-        System.out.println("Searching for port name configuration..");
-        //System.out.println("Load properties: " + this.workingPath + "/" + this.configFileName);
+        logger.info("Searching for port name configuration..");
+        //logger.info("Load properties: " + this.workingPath + "/" + this.configFileName);
         Properties config = new Properties();
-        //System.out.println("First try loading from the current directory");
+        //logger.info("First try loading from the current directory");
         try {
             InputStream in = new FileInputStream(this.workingPath + this.configFileName);
             config.load(in);
             in.close();
             portName = config.getProperty("CommPortName");
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
         if (portName==null){
             throw new CommPortException("CommPortName is not found in " + this.workingPath + this.configFileName);
@@ -124,14 +129,14 @@ public class SerialHardwareDetector {
     }
 
     private CommPortIdentifier getPortIdentifier() throws CommPortException, NoSuchPortException {
-        System.out.println("Getting PortID for \"" + portName + "\"..");
+        logger.info("Getting PortID for \"" + portName + "\"..");
         CommPortIdentifier commPortIdentifier = CommPortIdentifier.getPortIdentifier(portName);
         checkPortProperties(commPortIdentifier);
         return commPortIdentifier;
     }
 
     private void checkPortProperties(CommPortIdentifier commPortIdentifier) throws CommPortException {
-        System.out.println("Checking port properties..");
+        logger.info("Checking port properties..");
         if(CommPortIdentifier.PORT_SERIAL!=commPortIdentifier.getPortType()){
             throw new CommPortException("Wrong port type. Serial port expected.");
         }
@@ -141,31 +146,37 @@ public class SerialHardwareDetector {
     }
 
     private void checkPort(CommPortIdentifier commPortIdentifier) {
-        System.out.println("Checking port " + portName);
+        logger.info("Checking port " + portName);
         try {
             openSerialPort(commPortIdentifier);
-            System.out.println("Port " + portName + " is available. Trying to work with it as Arduino.");
+            logger.info("Port " + portName + " is available. Trying to work with it as Arduino.");
             initStreams();
             this.serialCommunicator.initListener();
-        } catch (UnsupportedCommOperationException | TooManyListenersException | IOException e) {
+        } catch (UnsupportedCommOperationException e) {
             if (serialPort != null)serialPort.close();
             clearPortAttributes();
-            e.printStackTrace();
-        } catch (PortInUseException | CommPortException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
+        } catch (PortInUseException e) {
+            logger.error(e.getMessage(), e);
+        } catch (TooManyListenersException e) {
+            logger.error(e.getMessage(), e);
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        } catch (CommPortException e) {
+            logger.error(e.getMessage(), e);
         }
     }
 
     private void openSerialPort(CommPortIdentifier commPortIdentifier) throws PortInUseException, UnsupportedCommOperationException, CommPortException {
-        System.out.println("Opening port..");
+        logger.info("Opening port..");
         CommPort commPort = commPortIdentifier.open(this.getClass().getName(), COMM_OPEN_TIMEOUT);
-        System.out.println("Checking port properties..");
+        logger.info("Checking port properties..");
         if (!(commPort instanceof SerialPort)){
             commPort.close();
             throw new CommPortException("Wrong port type. Serial port expected.");
         }
         serialPort = (SerialPort) commPort;
-        System.out.println("Setting up the port..");
+        logger.info("Setting up the port..");
         serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
     }
 
@@ -186,7 +197,7 @@ public class SerialHardwareDetector {
         try {
             fwVersion = this.serialCommunicator.sendCommand("version");
         } catch (CommPortException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
         if (fwVersion == null || !fwVersion.startsWith("Arduino")) {
             disconnect();
@@ -194,8 +205,8 @@ public class SerialHardwareDetector {
             clearPortAttributes();
             throw new CommPortException("There is no Arduino on " + portName);
         }
-        System.out.println("Port " + this.portName + " looks like her magesty Arduino!");
-        System.out.println("Detected: " + fwVersion);
+        logger.info("Port " + this.portName + " looks like her magesty Arduino!");
+        logger.info("Detected: " + fwVersion);
     }
 
     public void disconnect()
@@ -205,17 +216,17 @@ public class SerialHardwareDetector {
         try {
             this.in.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
         try {
             this.out.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
     private String detectCommPort() throws CommPortException {
-        System.out.println("Trying to detect Arduino on any serial port..");
+        logger.info("Trying to detect Arduino on any serial port..");
         Enumeration thePorts = CommPortIdentifier.getPortIdentifiers();
         while (thePorts.hasMoreElements()) {
             CommPortIdentifier commPortIdentifier = (CommPortIdentifier) thePorts.nextElement();
@@ -230,7 +241,7 @@ public class SerialHardwareDetector {
                 saveDetectedPortConfiguration();
                 break;
             } catch (CommPortException e) {
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
             }
         }
         if (serialPort == null) throw new CommPortException("Unable to detect Arduino on any COM port");
@@ -238,7 +249,7 @@ public class SerialHardwareDetector {
     }
 
     private void saveDetectedPortConfiguration() {
-        System.out.println("Saving " + portName + " to configuration file for future runs");
+        logger.info("Saving " + portName + " to configuration file for future runs");
         Properties config = new Properties();
         config.setProperty("CommPortName", portName);
         FileOutputStream out;
@@ -248,7 +259,7 @@ public class SerialHardwareDetector {
             config.store(out, "Automatically detected port configuration");
             out.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -265,7 +276,7 @@ public class SerialHardwareDetector {
             else
                 throw new UnsupportedHardwareException("\"Hardware\" command is not supported by Firmware");
         }
-        System.out.println("Hardware detected: " + result);
+        logger.info("Hardware detected: " + result);
         return chassisType;
     }
 

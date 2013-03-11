@@ -1,6 +1,7 @@
 package net.ant.rc.serial;
 
 import net.ant.rc.serial.exception.CommPortException;
+import org.apache.log4j.Logger;
 
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +19,7 @@ public class SerialService implements Runnable {
     private final long POLL_WAIT_TIMEOUT = 3000;
     private final SerialDriver serialDriver;
     private final PriorityBlockingQueue<Command> commandQueue;
+    private final Logger logger;
     private Command STOP = TractorCommand.STOP(0);
     private Command lastCommand = STOP;
     private boolean serviceStopped = false;
@@ -59,15 +61,17 @@ public class SerialService implements Runnable {
 
                 if (command.commandType.equals("Digital")){
                     if (command instanceof VectorCommand) {
-                        System.out.println(serialDriver.sendVectorCommand(vectorCommand.x, vectorCommand.y));
+                        logger.info(serialDriver.sendVectorCommand(vectorCommand.x, vectorCommand.y));
                     }
                     if (command instanceof TractorCommand) {
-                        System.out.println(serialDriver.sendTractorCommand(tractorCommand.left, tractorCommand.right));
+                        logger.info(serialDriver.sendTractorCommand(tractorCommand.left, tractorCommand.right));
                     }
                     lastCommand = command;
                 }
-            } catch (InterruptedException | CommPortException e) {
-                e.printStackTrace();
+            } catch (CommPortException e) {
+                logger.error(e.getMessage(), e);
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage(), e);
             }
         }
    }
@@ -76,7 +80,7 @@ public class SerialService implements Runnable {
     private boolean CheckBypass1(Command command, String valueForLog){
         boolean result = false;
         if (command.timeMillis < lastCommand.timeMillis){
-            System.out.println("Bypass1 value of [" + valueForLog + "] for " + command.timeMillis + " < " + lastCommand.timeMillis);
+            logger.info("Bypass1 value of [" + valueForLog + "] for " + command.timeMillis + " < " + lastCommand.timeMillis);
             result = true;
         }
         return result;
@@ -86,7 +90,7 @@ public class SerialService implements Runnable {
     private boolean CheckBypass2(Command command, String valueForLog){
         boolean result = false;
         if (command.equals(lastCommand)){
-            System.out.println("Bypass2 value of [" + valueForLog + "] already sent");
+            logger.info("Bypass2 value of [" + valueForLog + "] already sent");
             result = true;
         }
         return result;
@@ -96,7 +100,7 @@ public class SerialService implements Runnable {
     private boolean CheckBypass3(Command command, String valueForLog){
         boolean result = false;
         if (queueSize > MAX_QUEUE_SIZE){
-            System.out.println("Bypass3 value of [" + valueForLog + "] for " + queueSize + ">" + MAX_QUEUE_SIZE);
+            logger.info("Bypass3 value of [" + valueForLog + "] for " + queueSize + ">" + MAX_QUEUE_SIZE);
             result = true;
         }
         return result;
@@ -105,6 +109,7 @@ public class SerialService implements Runnable {
     public SerialService(SerialDriver serialDriver, PriorityBlockingQueue<Command> commandQueue) {
         this.serialDriver = serialDriver;
         this.commandQueue = commandQueue;
+        this.logger = Logger.getLogger(this.getClass());
     }
 
     public void stop(){
