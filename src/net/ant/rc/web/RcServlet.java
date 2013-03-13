@@ -3,6 +3,7 @@ package net.ant.rc.web;
 import net.ant.rc.serial.Command;
 import net.ant.rc.serial.TractorCommand;
 import net.ant.rc.serial.VectorCommand;
+import org.apache.log4j.Logger;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
@@ -16,6 +17,8 @@ import java.util.concurrent.PriorityBlockingQueue;
  * To change this template use File | Settings | File Templates.
  */
 public class RcServlet extends javax.servlet.http.HttpServlet {
+    private final Logger logger = Logger.getLogger(this.getClass());;
+
     protected void doPost(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException, IOException {
         final ServletContext servletContext = request.getServletContext();
 
@@ -37,7 +40,7 @@ public class RcServlet extends javax.servlet.http.HttpServlet {
             commandQueue.put(new TractorCommand("Digital", x, y, timeMillis));
         }
 
-        System.out.println("RCServlet: x=" + String.valueOf(x) + "; y=" + String.valueOf(y));
+        logger.info("RCServlet: x=" + String.valueOf(x) + "; y=" + String.valueOf(y));
     }
 
     protected void doGet(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException, IOException {

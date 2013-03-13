@@ -1,9 +1,14 @@
 package net.ant.rc.serial;
 
-import gnu.io.*;
+import gnu.io.SerialPort;
+import gnu.io.SerialPortEvent;
+import gnu.io.SerialPortEventListener;
 import net.ant.rc.serial.exception.CommPortException;
+import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Date;
 import java.util.TooManyListenersException;
 
@@ -23,8 +28,11 @@ public class SerialCommunicator implements SerialPortEventListener{
     private int receivedCount = 0;
     private final SerialHardwareDetector serialHardwareDetector;
 
+    private final Logger logger;
+
     public SerialCommunicator(SerialHardwareDetector serialHardwareDetector) {
         this.serialHardwareDetector = serialHardwareDetector;
+        logger = Logger.getLogger(this.getClass());
     }
 
     void initListener() throws TooManyListenersException {
@@ -35,7 +43,7 @@ public class SerialCommunicator implements SerialPortEventListener{
         try {
             Thread.sleep(LISTENER_INIT_TIMEOUT);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -53,7 +61,7 @@ public class SerialCommunicator implements SerialPortEventListener{
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -79,7 +87,7 @@ public class SerialCommunicator implements SerialPortEventListener{
         try {
             out.write((message + "\n").getBytes());
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
