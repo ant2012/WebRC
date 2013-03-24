@@ -31,8 +31,8 @@ public class Arduino2WDSerialDriver extends SerialDriver {
     public String sendTractorCommand(int left, int right) throws CommPortException {
         int leftSign  = (left <0)?-1:1;
         int rightSign = (right<0)?-1:1;
-        int leftWheelSpeed  = (Math.abs(left) >=this.maxClientValue)?leftSign *this.maxSpeed:left /this.maxClientValue*this.maxSpeed;
-        int rightWheelSpeed = (Math.abs(right)>=this.maxClientValue)?rightSign*this.maxSpeed:right/this.maxClientValue*this.maxSpeed;
+        int leftWheelSpeed  = (Math.abs(left) >=this.maxClientValue)?leftSign *this.maxSpeed:left *this.maxSpeed/this.maxClientValue;
+        int rightWheelSpeed = (Math.abs(right)>=this.maxClientValue)?rightSign*this.maxSpeed:right*this.maxSpeed/this.maxClientValue;
         return this.serialCommunicator.sendCommand(generateDigitalCommand(new Arduino2WDEachWheelCommand(-leftWheelSpeed, -rightWheelSpeed)));
     }
 

@@ -31,11 +31,13 @@ public class SerialService implements Runnable {
         while(!this.serviceStopped){
             try {
                 Command command = this.commandQueue.poll(POLL_WAIT_TIMEOUT, TimeUnit.MILLISECONDS);
-
                 //If timeout was expired
                 if (command == null) {
                     //if last command was STOP then continue waiting, else go to send STOP
-                    if (lastCommand.equals(STOP)) continue;
+                    if (lastCommand.equals(STOP)) {
+                        //logger.info("Lifecycle tick");
+                        continue;
+                    }
                     //TODO: Check stop on client disconnect
                     command = TractorCommand.STOP(lastCommand.timeMillis);
                 }
@@ -68,19 +70,18 @@ public class SerialService implements Runnable {
                     }
                     lastCommand = command;
                 }
-            } catch (CommPortException e) {
-                logger.error(e.getMessage(), e);
-            } catch (InterruptedException e) {
+            } catch (CommPortException | InterruptedException e) {
                 logger.error(e.getMessage(), e);
             }
         }
+        logger.info("Exit the lifecycle");
    }
 
     //Bypass the entries older then last sended
     private boolean CheckBypass1(Command command, String valueForLog){
         boolean result = false;
         if (command.timeMillis < lastCommand.timeMillis){
-            logger.info("Bypass1 value of [" + valueForLog + "] for " + command.timeMillis + " < " + lastCommand.timeMillis);
+            //logger.info("Bypass1 value of [" + valueForLog + "] for " + command.timeMillis + " < " + lastCommand.timeMillis);
             result = true;
         }
         return result;
@@ -90,7 +91,7 @@ public class SerialService implements Runnable {
     private boolean CheckBypass2(Command command, String valueForLog){
         boolean result = false;
         if (command.equals(lastCommand)){
-            logger.info("Bypass2 value of [" + valueForLog + "] already sent");
+            //logger.info("Bypass2 value of [" + valueForLog + "] already sent");
             result = true;
         }
         return result;
@@ -100,7 +101,7 @@ public class SerialService implements Runnable {
     private boolean CheckBypass3(Command command, String valueForLog){
         boolean result = false;
         if (queueSize > MAX_QUEUE_SIZE){
-            logger.info("Bypass3 value of [" + valueForLog + "] for " + queueSize + ">" + MAX_QUEUE_SIZE);
+            //logger.info("Bypass3 value of [" + valueForLog + "] for " + queueSize + ">" + MAX_QUEUE_SIZE);
             result = true;
         }
         return result;

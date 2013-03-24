@@ -66,18 +66,26 @@ public class SerialCommunicator implements SerialPortEventListener{
     }
 
     public void serialEvent(SerialPortEvent serialPortEvent) {
-        if (serialPortEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE)
+        if (serialPortEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
             readLineFromInput();
+        }else{
+            logger.info("Serial event: " + serialPortEvent.getEventType());
+        }
     }
 
     private String checkMessage() {
-        readLineFromInput();
         String message = null;
         if (isReadComplete) {
             message = new String(receivedData, 0, receivedCount);
             receivedData = new byte[200];
             receivedCount = 0;
             isReadComplete = false;
+        }else{
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage(), e);
+            }
         }
         return message;
     }
