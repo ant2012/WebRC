@@ -13,5 +13,6 @@
 <body>
     <p><a href="vectorRC.html">VectorRC</a></p>
     <p><a href="tractorRC.html">TractorRC</a></p>
+    <iframe src="http://embed.bambuser.com/channel/webrc" width="460" height="396" frameborder="0">Your browser does not support iframes.</iframe>
 </body>
 </html>
