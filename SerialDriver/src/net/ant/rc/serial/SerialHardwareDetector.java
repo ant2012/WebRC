@@ -7,9 +7,7 @@ import net.ant.rc.serial.exception.UnsupportedHardwareException;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.Enumeration;
-import java.util.Properties;
-import java.util.TooManyListenersException;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -103,9 +101,7 @@ public class SerialHardwareDetector {
             checkPort(commPortIdentifier);
             //Check port by querying Firmware version
             checkFirmwareVersion();
-        } catch (NoSuchPortException e) {
-            logger.error(e.getMessage(), e);
-        } catch (CommPortException e) {
+        } catch (NoSuchPortException | CommPortException e) {
             logger.error(e.getMessage(), e);
         }
     }
@@ -178,6 +174,7 @@ public class SerialHardwareDetector {
         serialPort = (SerialPort) commPort;
         logger.info("Setting up the port..");
         serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+        serialPort.enableReceiveTimeout(COMM_OPEN_TIMEOUT);
     }
 
     private void initStreams() throws IOException {
@@ -227,11 +224,17 @@ public class SerialHardwareDetector {
 
     private String detectCommPort() throws CommPortException {
         logger.info("Trying to detect Arduino on any serial port..");
-        Enumeration thePorts = CommPortIdentifier.getPortIdentifiers();
-        while (thePorts.hasMoreElements()) {
-            CommPortIdentifier commPortIdentifier = (CommPortIdentifier) thePorts.nextElement();
+        Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
+        Vector portVector = new Vector();
+        while (portEnum.hasMoreElements()) {
+            portVector.add(portEnum.nextElement());
+        }
+        int portCount = portVector.size();
+        for(int i=0;i<portCount;i++){
+            CommPortIdentifier commPortIdentifier = (CommPortIdentifier) portVector.get(i);
             try {
                 portName = commPortIdentifier.getName();
+                logger.info("Checking port:" + portName + "(" + (i+1) + " of " + portCount + ")");
                 checkPortProperties(commPortIdentifier);
                 checkPort(commPortIdentifier);
                 if (serialPort == null) continue;

@@ -17,7 +17,7 @@ import java.util.concurrent.PriorityBlockingQueue;
  * To change this template use File | Settings | File Templates.
  */
 public class RcServlet extends javax.servlet.http.HttpServlet {
-    private final Logger logger = Logger.getLogger(this.getClass());;
+    private final Logger logger = Logger.getLogger(this.getClass());
 
     protected void doPost(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException, IOException {
         final ServletContext servletContext = request.getServletContext();

@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
  * User: Ant
  * Date: 04.02.13
  * Time: 23:34
- * To change this template use File | Settings | File Templates.
  */
 public class SerialService implements Runnable {
 
@@ -38,7 +37,6 @@ public class SerialService implements Runnable {
                         //logger.info("Lifecycle tick");
                         continue;
                     }
-                    //TODO: Check stop on client disconnect
                     command = TractorCommand.STOP(lastCommand.timeMillis);
                 }
                 queueSize = this.commandQueue.size();
