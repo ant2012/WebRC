@@ -53,6 +53,7 @@ public class WebRCContextHolder implements ServletContextListener,
 
             this.serialHardwareDetector = new SerialHardwareDetector(workingPath);
             SerialDriver serialDriver = serialHardwareDetector.getSerialDriver();
+            servletContext.setAttribute("SerialDriver", serialDriver);
 
             PriorityBlockingQueue<Command> commandQueue = new PriorityBlockingQueue<Command>();
             servletContext.setAttribute("CommandQueue", commandQueue);

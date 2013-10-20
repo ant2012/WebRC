@@ -29,6 +29,7 @@ public class SerialService implements Runnable {
 
         while(!this.serviceStopped){
             try {
+                serialDriver.getChipParameters();
                 Command command = this.commandQueue.poll(POLL_WAIT_TIMEOUT, TimeUnit.MILLISECONDS);
                 //If timeout was expired
                 if (command == null) {

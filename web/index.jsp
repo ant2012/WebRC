@@ -1,4 +1,5 @@
 <%@ page import="net.ant.rc.rpi.Shell" %>
+<%@ page import="net.ant.rc.serial.SerialDriver" %>
 <%--
   Created by IntelliJ IDEA.
   User: Ant
@@ -21,8 +22,22 @@
     <%
         String shellResult = Shell.execute(request.getParameter("command"));
         if(shellResult != null){
-            out.println(shellResult);
+            out.println("<p>Shell result: " + shellResult + "</p>");
         }
+    %>
+    <%
+        shellResult = Shell.execute("temperature");
+        Double temperature = Double.parseDouble(shellResult) / 1000;
+        if(shellResult != null){
+            out.println("<p>RPi onboard temperature: " + temperature + "C&deg;</p>");
+        }
+        final ServletContext servletContext = request.getServletContext();
+
+        SerialDriver serialDriver = (SerialDriver) servletContext.getAttribute("SerialDriver");
+        double t = serialDriver.getChipTemperature() / 1000;
+        out.println("<p>Arduino onboard temperature: " + t + "C&deg;</p>");
+        t = serialDriver.getChipVoltage() / 1000;
+        out.println("<p>Arduino onboard voltage: " + t + "V</p>");
     %>
 </body>
 </html>

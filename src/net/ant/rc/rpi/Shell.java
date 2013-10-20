@@ -21,6 +21,9 @@ public class Shell {
         }else
         if ("shutdown".equals(command)){
             c = new String[]{"/usr/bin/sudo", "/sbin/shutdown", "now"};
+        }else
+        if ("temperature".equals(command)){
+            c = new String[]{"cat", "/sys/class/thermal/thermal_zone0/temp"};
         }else{
             return null;
         }
@@ -28,9 +31,9 @@ public class Shell {
         try {
             Process p = Runtime.getRuntime().exec(c);
             byte[] buf = new byte[500];
-            Thread.sleep(1000);
+            Thread.sleep(3000);
             p.getInputStream().read(buf);
-            return "Shell command result:" + new String(buf);
+            return new String(buf);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             return e.getMessage();
