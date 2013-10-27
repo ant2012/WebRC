@@ -28,7 +28,8 @@ import java.util.concurrent.PriorityBlockingQueue;
 public class WebRCContextHolder implements ServletContextListener,
         HttpSessionListener, HttpSessionAttributeListener {
 
-    SerialHardwareDetector serialHardwareDetector;
+    //SerialHardwareDetector serialHardwareDetector;
+    SerialDriver serialDriver;
     SerialService serialService;
     private final Logger logger;
 
@@ -47,27 +48,19 @@ public class WebRCContextHolder implements ServletContextListener,
       */
         ServletContext servletContext = sce.getServletContext();
 
-        try {
-            String workingPath = servletContext.getRealPath("/WEB-INF/classes/.");
-            workingPath = workingPath.substring(0, workingPath.length()-1);
+        String workingPath = servletContext.getRealPath("/WEB-INF/classes/.");
+        workingPath = workingPath.substring(0, workingPath.length()-1);
 
-            this.serialHardwareDetector = new SerialHardwareDetector(workingPath);
-            SerialDriver serialDriver = serialHardwareDetector.getSerialDriver();
-            servletContext.setAttribute("SerialDriver", serialDriver);
+        PriorityBlockingQueue<Command> commandQueue = new PriorityBlockingQueue<Command>();
 
-            PriorityBlockingQueue<Command> commandQueue = new PriorityBlockingQueue<Command>();
-            servletContext.setAttribute("CommandQueue", commandQueue);
+        this.serialService = new SerialService(commandQueue, workingPath);
+        this.serialDriver = serialService.getSerialDriver();
 
-            this.serialService = new SerialService(serialDriver, commandQueue);
-            Thread serialServiceThread = new Thread(this.serialService);
-            serialServiceThread.start();
-        } catch (CommPortException e) {
-            logger.error(e.getMessage(), e);
-        } catch (UnsupportedHardwareException e) {
-            logger.error(e.getMessage(), e);
-        }
+        servletContext.setAttribute("CommandQueue", commandQueue);
+        servletContext.setAttribute("SerialDriver", serialDriver);
 
-
+        Thread serialServiceThread = new Thread(this.serialService);
+        serialServiceThread.start();
     }
 
     public void contextDestroyed(ServletContextEvent sce) {
@@ -75,8 +68,8 @@ public class WebRCContextHolder implements ServletContextListener,
          (the Web application) is undeployed or 
          Application Server shuts down.
       */
-        if(this.serialHardwareDetector !=null)
-            this.serialHardwareDetector.disconnect();
+        if(this.serialDriver !=null)
+            this.serialDriver.disconnect();
         if(this.serialService != null)
             this.serialService.stop();
     }

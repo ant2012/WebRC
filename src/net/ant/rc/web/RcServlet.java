@@ -34,10 +34,10 @@ public class RcServlet extends javax.servlet.http.HttpServlet {
         long timeMillis = Long.valueOf(request.getParameter("milliseconds"));
 
         if (commandType.equals("Vector")) {
-            commandQueue.put(new VectorCommand("Digital", x, y, timeMillis));
+            commandQueue.put(new VectorCommand(x, y, timeMillis));
         }
         if (commandType.equals("Tractor")) {
-            commandQueue.put(new TractorCommand("Digital", x, y, timeMillis));
+            commandQueue.put(new TractorCommand(x, y, timeMillis));
         }
 
         logger.info("RCServlet: x=" + String.valueOf(x) + "; y=" + String.valueOf(y));
