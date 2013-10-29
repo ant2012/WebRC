@@ -34,10 +34,14 @@
         final ServletContext servletContext = request.getServletContext();
 
         SerialDriver serialDriver = (SerialDriver) servletContext.getAttribute("SerialDriver");
-        double t = serialDriver.getChipTemperature() / 1000;
-        out.println("<p>Arduino onboard temperature: " + t + "C&deg;</p>");
-        t = serialDriver.getChipVoltage() / 1000;
-        out.println("<p>Arduino onboard voltage: " + t + "V</p>");
+        if(serialDriver != null){
+            double t = serialDriver.getChipTemperature() / 1000;
+            out.println("<p>Arduino onboard temperature: " + t + "C&deg;</p>");
+            t = serialDriver.getChipVoltage() / 1000;
+            out.println("<p>Arduino onboard voltage: " + t + "V</p>");
+        }else{
+            out.println("<p>SerialDriver was not initialized. <a href=\"/webrc/servlet?do=Init\">Initialize it!</a></p>");
+        }
     %>
 </body>
 </html>

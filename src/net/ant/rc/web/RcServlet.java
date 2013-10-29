@@ -1,12 +1,11 @@
 package net.ant.rc.web;
 
-import net.ant.rc.serial.Command;
-import net.ant.rc.serial.TractorCommand;
-import net.ant.rc.serial.VectorCommand;
+import net.ant.rc.serial.*;
 import org.apache.log4j.Logger;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.concurrent.PriorityBlockingQueue;
 
 /**
@@ -44,7 +43,31 @@ public class RcServlet extends javax.servlet.http.HttpServlet {
     }
 
     protected void doGet(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException, IOException {
-        //String jsonData = request.getQueryString();
+        String command = request.getParameter("do");
+        if(command != null && command.equals("Init")){
+            final ServletContext servletContext = request.getServletContext();
+            PrintWriter out = response.getWriter();
 
+            SerialDriver serialDriver = (SerialDriver) servletContext.getAttribute("SerialDriver");
+            if(serialDriver != null){
+                out.println("<p>Already initialized</p>");
+            }else{
+                logger.info("Init Service Manually..");
+
+                String workingPath = servletContext.getRealPath("/WEB-INF/classes/.");
+                workingPath = workingPath.substring(0, workingPath.length()-1);
+
+                PriorityBlockingQueue<Command> commandQueue = new PriorityBlockingQueue<Command>();
+
+                SerialService serialService = new SerialService(commandQueue, workingPath);
+                serialDriver = serialService.getSerialDriver();
+
+                servletContext.setAttribute("CommandQueue", commandQueue);
+                servletContext.setAttribute("SerialDriver", serialDriver);
+
+                Thread serialServiceThread = new Thread(serialService);
+                serialServiceThread.start();
+            }
+        }
     }
 }
