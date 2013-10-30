@@ -45,29 +45,30 @@ public class RcServlet extends javax.servlet.http.HttpServlet {
     protected void doGet(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException, IOException {
         String command = request.getParameter("do");
         if(command != null && command.equals("Init")){
-            final ServletContext servletContext = request.getServletContext();
-            PrintWriter out = response.getWriter();
+            //initSerialService(request);
+        }
+    }
 
-            SerialDriver serialDriver = (SerialDriver) servletContext.getAttribute("SerialDriver");
-            if(serialDriver != null){
-                out.println("<p>Already initialized</p>");
-            }else{
-                logger.info("Init Service Manually..");
+    private void initSerialService(javax.servlet.http.HttpServletRequest request){
+        final ServletContext servletContext = request.getServletContext();
 
-                String workingPath = servletContext.getRealPath("/WEB-INF/classes/.");
-                workingPath = workingPath.substring(0, workingPath.length()-1);
+        SerialDriver serialDriver = (SerialDriver) servletContext.getAttribute("SerialDriver");
+        if(serialDriver == null){
+            logger.info("Init Service Manually..");
 
-                PriorityBlockingQueue<Command> commandQueue = new PriorityBlockingQueue<Command>();
+            String workingPath = servletContext.getRealPath("/WEB-INF/classes/.");
+            workingPath = workingPath.substring(0, workingPath.length()-1);
 
-                SerialService serialService = new SerialService(commandQueue, workingPath);
-                serialDriver = serialService.getSerialDriver();
+            PriorityBlockingQueue<Command> commandQueue = new PriorityBlockingQueue<Command>();
 
-                servletContext.setAttribute("CommandQueue", commandQueue);
-                servletContext.setAttribute("SerialDriver", serialDriver);
+            SerialService serialService = new SerialService(commandQueue, workingPath);
+            serialDriver = serialService.getSerialDriver();
 
-                Thread serialServiceThread = new Thread(serialService);
-                serialServiceThread.start();
-            }
+            servletContext.setAttribute("CommandQueue", commandQueue);
+            servletContext.setAttribute("SerialDriver", serialDriver);
+
+            Thread serialServiceThread = new Thread(serialService);
+            serialServiceThread.start();
         }
     }
 }

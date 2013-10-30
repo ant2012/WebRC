@@ -32,7 +32,11 @@ public class Shell {
             Process p = Runtime.getRuntime().exec(c);
             byte[] buf = new byte[500];
             Thread.sleep(3000);
-            p.getInputStream().read(buf);
+            if(p.exitValue()==1){
+                p.getErrorStream().read(buf);
+            }else{
+                p.getInputStream().read(buf);
+            }
             return new String(buf);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);

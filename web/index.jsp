@@ -1,47 +1,172 @@
 <%@ page import="net.ant.rc.rpi.Shell" %>
 <%@ page import="net.ant.rc.serial.SerialDriver" %>
-<%--
-  Created by IntelliJ IDEA.
-  User: Ant
-  Date: 17.02.13
-  Time: 1:10
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>RC Index</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>WebRC Home</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="http://getbootstrap.com/dist/css/bootstrap.css" rel="stylesheet">
+    <!-- Bootstrap theme -->
+    <link href="http://getbootstrap.com/dist/css/bootstrap-theme.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="http://getbootstrap.com/examples/theme/theme.css" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]><script src="http://getbootstrap.com/docs-assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
 </head>
+
 <body>
-    <p><a href="/webrc">Home</a></p>
-    <!--p><a href="vectorRC.html">VectorRC</a></p-->
-    <p><a href="tractorRC.html">TractorRC</a></p>
-    <!--iframe src="http://embed.bambuser.com/channel/webrc" width="460" height="396" frameborder="0">Your browser does not support iframes.</iframe-->
-    <p><a href="?command=reboot">Reboot RaspberryPI</a></p>
-    <p><a href="?command=shutdown">Shutdown RaspberryPI</a></p>
+
+<!-- Fixed navbar -->
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/webrc/">WebRC</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="/webrc/">Home</a></li>
+                <li><a href="tractorRC.html">TractorRC</a></li>
+                <li><a href="vectorRC.html">VectorRC</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">RPi <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="?command=reboot">Reboot</a></li>
+                        <li><a href="?command=shutdown">Shutdown</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</div>
+
+<div class="container theme-showcase">
+
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+        <h1>Hello, Master!</h1>
+        <p>You are on WebRC Home. Here you can monitor and control your Robot.</p>
+        <p><a href="tractorRC.html" title="Runs Tractor-style control as Default" class="btn btn-primary btn-lg" role="button">Let's drive! &raquo;</a></p>
+    </div>
+
+
     <%
-        String shellResult = Shell.execute(request.getParameter("command"));
-        if(shellResult != null){
-            out.println("<p>Shell result: " + shellResult + "</p>");
+        String shellResult = Shell.execute("temperature");
+        String alertDangerText = "";
+        double temperature = Double.NEGATIVE_INFINITY;
+        try{
+            temperature = Double.parseDouble(shellResult) / 1000;
+        }catch(NumberFormatException e){
+            alertDangerText = alertDangerText +"Can not get Temperature from the RPi. Shell result is \"" + shellResult + "\"";
         }
-    %>
-    <%
-        shellResult = Shell.execute("temperature");
-        Double temperature = Double.parseDouble(shellResult) / 1000;
-        if(shellResult != null){
-            out.println("<p>RPi onboard temperature: " + temperature + "C&deg;</p>");
-        }
+        String rpiTemp = (Double.compare(temperature, Double.NEGATIVE_INFINITY)==0?"unavailable":temperature + "C&deg;");
+
         final ServletContext servletContext = request.getServletContext();
 
         SerialDriver serialDriver = (SerialDriver) servletContext.getAttribute("SerialDriver");
+        String alertInfoText = "";
+        double voltage = Double.NEGATIVE_INFINITY;
+        temperature = Double.NEGATIVE_INFINITY;
         if(serialDriver != null){
-            double t = serialDriver.getChipTemperature() / 1000;
-            out.println("<p>Arduino onboard temperature: " + t + "C&deg;</p>");
-            t = serialDriver.getChipVoltage() / 1000;
-            out.println("<p>Arduino onboard voltage: " + t + "V</p>");
+            alertInfoText = "Arduino2WD Robot successfully connected trough the SerialPort.";
+            temperature = serialDriver.getChipTemperature() / 1000;
+            voltage = serialDriver.getChipVoltage() / 1000;
         }else{
-            out.println("<p>SerialDriver was not initialized. <a href=\"/webrc/servlet?do=Init\">Initialize it!</a></p>");
+            if(!alertDangerText.equals(""))alertDangerText = alertDangerText + "<br>";
+            alertDangerText = alertDangerText + "SerialDriver was not initialized! <!--a href=\"/webrc/servlet?do=Init\">Initialize it!</a-->";
+        }
+        String arduinoTemp = (Double.compare(temperature, Double.NEGATIVE_INFINITY)==0?"unavailable":temperature + "C&deg;");
+        String arduinoVoltage = (Double.compare(voltage, Double.NEGATIVE_INFINITY)==0?"unavailable":voltage + "V");
+
+    %>
+
+
+
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Raspberry PI Info</h3>
+                </div>
+                <div class="panel-body">
+                    RPi onboard temperature:<strong><%out.println(rpiTemp);%></strong>
+                </div>
+            </div>
+        </div><!-- /.col-sm-4 -->
+        <div class="col-sm-4">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Arduino Info</h3>
+                </div>
+                <div class="panel-body">
+                    Arduino onboard temperature:<strong><%out.println(arduinoTemp);%></strong><br>
+                    Arduino onboard voltage:<strong><%out.println(arduinoVoltage);%></strong>
+                </div>
+            </div>
+        </div><!-- /.col-sm-4 -->
+        <div class="col-sm-4">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">WebRC Info</h3>
+                </div>
+                <div class="panel-body">
+                    Panel content
+                </div>
+            </div>
+        </div><!-- /.col-sm-4 -->
+    </div>
+
+    <%
+        String command = request.getParameter("command");
+        shellResult = Shell.execute(command);
+        if(shellResult != null){
+            if(!alertInfoText.equals(""))alertInfoText = alertInfoText + "<br>";
+            alertInfoText = alertInfoText + "<strong>Shell result for \"" + command + "\":</strong> " + shellResult;
+        }
+        if(!alertDangerText.equals("")){
+            String alert =
+                    "<div class=\"alert alert-danger\">\n" +
+                            "    " + alertDangerText +
+                            "</div>";
+            out.println(alert);
+        }
+        if(!alertInfoText.equals("")){
+            String alert =
+                    "<div class=\"alert alert-info\">\n" +
+                            "    " + alertInfoText +
+                            "</div>";
+            out.println(alert);
         }
     %>
+
+</div> <!-- /container -->
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+<script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+<script src="http://getbootstrap.com/docs-assets/js/holder.js"></script>
 </body>
 </html>
