@@ -1,5 +1,6 @@
 <%@ page import="net.ant.rc.rpi.Shell" %>
 <%@ page import="net.ant.rc.serial.SerialDriver" %>
+<%@ page import="net.ant.rc.rpi.RpiState" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="en">
@@ -71,22 +72,23 @@
 
 
     <%
-        String shellResult = Shell.execute("temperature");
-        String alertDangerText = "";
-        double temperature = Double.NEGATIVE_INFINITY;
-        try{
-            temperature = Double.parseDouble(shellResult) / 1000;
-        }catch(NumberFormatException e){
-            alertDangerText = alertDangerText +"Can not get Temperature from the RPi. Shell result is \"" + shellResult + "\"";
-        }
-        String rpiTemp = (Double.compare(temperature, Double.NEGATIVE_INFINITY)==0?"unavailable":temperature + "C&deg;");
-
         final ServletContext servletContext = request.getServletContext();
+        RpiState rpiState;
+        Object o = servletContext.getAttribute("PriState");
+        if (o == null){
+            rpiState = new RpiState(servletContext);
+            servletContext.setAttribute("RpiState", rpiState);
+        }else{
+            rpiState = (RpiState) o;
+            rpiState.refresh();
+        }
+
+        String alertDangerText = rpiState.getErrorsHtml();
 
         SerialDriver serialDriver = (SerialDriver) servletContext.getAttribute("SerialDriver");
         String alertInfoText = "";
         double voltage = Double.NEGATIVE_INFINITY;
-        temperature = Double.NEGATIVE_INFINITY;
+        double temperature = Double.NEGATIVE_INFINITY;
         if(serialDriver != null){
             alertInfoText = "Arduino2WD Robot successfully connected trough the SerialPort.";
             temperature = serialDriver.getChipTemperature() / 1000;
@@ -109,7 +111,14 @@
                     <h3 class="panel-title">Raspberry PI Info</h3>
                 </div>
                 <div class="panel-body">
-                    RPi onboard temperature:<strong><%out.println(rpiTemp);%></strong>
+                    Operating system:<strong><%out.println(rpiState.getOsDescription());%></strong><br>
+                    JRE runner user:<strong><%out.println(rpiState.getOsUser());%></strong><br>
+                    JRE:<strong><%out.println(rpiState.getJavaRuntimeDescription());%></strong><br>
+                    Application Server:<strong><%out.println(rpiState.getServletEngineVersion());%></strong><br>
+                    RXTX Library:<strong><%out.println(rpiState.getRXTXLibVersion());%></strong><br>
+                    RXTX Native:<strong><%out.println(rpiState.getRXTXNativeVersion());%></strong><br>
+                    RPi Timestamp:<strong><%out.println(rpiState.getSystemDateTime());%></strong><br>
+                    RPi onboard temperature:<strong><%out.println(rpiState.getChipTemperature());%></strong>
                 </div>
             </div>
         </div><!-- /.col-sm-4 -->
@@ -138,7 +147,7 @@
 
     <%
         String command = request.getParameter("command");
-        shellResult = Shell.execute(command);
+        String shellResult = Shell.execute(command);
         if(shellResult != null){
             if(!alertInfoText.equals(""))alertInfoText = alertInfoText + "<br>";
             alertInfoText = alertInfoText + "<strong>Shell result for \"" + command + "\":</strong> " + shellResult;
