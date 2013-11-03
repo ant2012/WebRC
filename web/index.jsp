@@ -117,7 +117,7 @@
                     Application Server:<strong><%out.println(rpiState.getServletEngineVersion());%></strong><br>
                     RXTX Library:<strong><%out.println(rpiState.getRXTXLibVersion());%></strong><br>
                     RXTX Native:<strong><%out.println(rpiState.getRXTXNativeVersion());%></strong><br>
-                    RPi Timestamp:<strong><%out.println(rpiState.getSystemDateTime());%></strong><br>
+                    Timestamp:<strong><%out.println(rpiState.getSystemDateTime());%></strong><br>
                     RPi onboard temperature:<strong><%out.println(rpiState.getChipTemperature());%></strong>
                 </div>
             </div>

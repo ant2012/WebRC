@@ -39,7 +39,7 @@ public class Shell {
             }
             return new String(buf);
         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
+            logger.error(e.getMessage());
             return e.getMessage();
         } catch (InterruptedException e) {
             logger.error(e.getMessage(), e);

@@ -8,10 +8,10 @@
           <element id="module-output" name="web" />
           <element id="module-output" name="WebRC" />
           <element id="module-output" name="SerialDriver" />
+          <element id="file-copy" path="$PROJECT_DIR$/SerialDriver/arduino.conf" />
         </element>
       </element>
       <element id="javaee-facet-resources" facet="WebRC/web/Web" />
-      <element id="file-copy" path="$PROJECT_DIR$/SerialDriver/arduino.conf" />
       <element id="directory" name="META-INF">
         <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
       </element>
