@@ -1,6 +1,7 @@
 <%@ page import="net.ant.rc.rpi.Shell" %>
-<%@ page import="net.ant.rc.serial.SerialDriver" %>
 <%@ page import="net.ant.rc.rpi.RpiState" %>
+<%@ page import="net.ant.rc.serial.*" %>
+<%@ page import="java.util.concurrent.PriorityBlockingQueue" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="en">
@@ -65,7 +66,7 @@
 
     <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="jumbotron">
-        <h1>Hello, Master!</h1>
+        <h1>HelloMaster!</h1>
         <p>You are on WebRC Home. Here you can monitor and control your Robot.</p>
         <p><a href="tractorRC.html" title="Runs Tractor-style control as Default" class="btn btn-primary btn-lg" role="button">Let's drive! &raquo;</a></p>
     </div>
@@ -89,8 +90,40 @@
         String alertInfoText = "";
         double voltage = Double.NEGATIVE_INFINITY;
         double temperature = Double.NEGATIVE_INFINITY;
+        String serialPortName = "n/a";
+        String batteryMin = "n/a";
+        String batteryMax = "n/a";
+        String batteryLevel = "n/a";
+        String serialListenerTimeout = "n/a";
+        String serialPortInternalTimeout = "n/a";
+        String hardwareSensorRefreshPeriod = "n/a";
+        String serialDriverClass = "n/a";
+        String serviceMaxQueueSize = "n/a";
+        String servicePollWaitTimeout = "n/a";
+        String serviceReconnectTimeout = "n/a";
         if(serialDriver != null){
-            alertInfoText = "Arduino2WD Robot successfully connected trough the SerialPort.";
+            SerialConnection connection = serialDriver.getSerialConnection();
+            if(connection != null) serialPortName = connection.getPortName();
+
+            Battery battery = serialDriver.getBattery();
+            if(battery != null) batteryLevel = String.valueOf(serialDriver.getBattery().checkVoltageLevel()) + "%";
+
+            serialDriverClass = serialDriver.getClass().getSimpleName();
+            Config conf = serialDriver.getConfig();
+
+            if(conf != null){
+                batteryMin = String.valueOf(Double.parseDouble(conf.getOption(Config.BATTERY_MIN_VOLTAGE))/1000) + "V";
+                batteryMax = String.valueOf(Double.parseDouble(conf.getOption(Config.BATTERY_MAX_VOLTAGE))/1000) + "V";
+                serialListenerTimeout = String.valueOf(Double.parseDouble(conf.getOption(Config.SERIAL_LISTENER_TIMEOUT))/1000) + "s";
+                serialPortInternalTimeout = String.valueOf(Double.parseDouble(conf.getOption(Config.COMM_PORT_INTERNAL_TIMEOUT))/1000) + "s";
+                hardwareSensorRefreshPeriod = String.valueOf(Double.parseDouble(conf.getOption(Config.SENSOR_REFRESH_PERIOD))/1000) + "s";
+                serviceMaxQueueSize = conf.getOption(Config.SERVICE_MAX_QUEUE_SIZE);
+                servicePollWaitTimeout = String.valueOf(Double.parseDouble(conf.getOption(Config.SERVICE_POLL_WAIT_TIMEOUT))/1000) + "s";
+                serviceReconnectTimeout = String.valueOf(Double.parseDouble(conf.getOption(Config.SERVICE_RECONNECT_TIMEOUT))/1000) + "s";
+
+            }
+
+            alertInfoText = "Arduino2WD Robot successfully connected trough the " + serialPortName;
             temperature = serialDriver.getChipTemperature() / 1000;
             voltage = serialDriver.getChipVoltage() / 1000;
         }else{
@@ -99,6 +132,10 @@
         }
         String arduinoTemp = (Double.compare(temperature, Double.NEGATIVE_INFINITY)==0?"unavailable":temperature + "C&deg;");
         String arduinoVoltage = (Double.compare(voltage, Double.NEGATIVE_INFINITY)==0?"unavailable":voltage + "V");
+
+        PriorityBlockingQueue<Command> commandQueue = (PriorityBlockingQueue<Command>) servletContext.getAttribute("CommandQueue");
+        String commandQueueSize = "n/a";
+        if(commandQueue != null) commandQueueSize = String.valueOf(commandQueue.size());
 
     %>
 
@@ -139,7 +176,19 @@
                     <h3 class="panel-title">WebRC Info</h3>
                 </div>
                 <div class="panel-body">
-                    Panel content
+                    SerialDriver class:<strong><%out.println(serialDriverClass);%></strong><br>
+                    Serial port name:<strong><%out.println(serialPortName);%></strong><br>
+                    Battery level:<strong><%out.println(batteryLevel);%></strong><br>
+                    Queue current size:<strong><%out.println(commandQueueSize);%></strong>
+                    <hr>
+                    Battery min Voltage:<strong><%out.println(batteryMin);%></strong><br>
+                    Battery max Voltage:<strong><%out.println(batteryMax);%></strong><br>
+                    Port listener timeout:<strong><%out.println(serialListenerTimeout);%></strong><br>
+                    Port internal timeout:<strong><%out.println(serialPortInternalTimeout);%></strong><br>
+                    Hardware sensor refresh period:<strong><%out.println(hardwareSensorRefreshPeriod);%></strong><br>
+                    Max queue size:<strong><%out.println(serviceMaxQueueSize);%></strong><br>
+                    Queue poll wait timeout:<strong><%out.println(servicePollWaitTimeout);%></strong><br>
+                    Service reconnect period:<strong><%out.println(serviceReconnectTimeout);%></strong>
                 </div>
             </div>
         </div><!-- /.col-sm-4 -->

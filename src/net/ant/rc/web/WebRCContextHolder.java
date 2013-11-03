@@ -62,8 +62,6 @@ public class WebRCContextHolder implements ServletContextListener {
          Application Server shuts down.
       */
         logger.info("Destroying ServletContext..");
-        if(this.serialDriver !=null)
-            this.serialDriver.disconnect();
         if(this.serialService != null)
             this.serialService.stop();
     }
