@@ -1,4 +1,4 @@
-package net.ant.rc.rpi;
+package ru.ant.rc.rpi;
 
 import org.apache.log4j.Logger;
 

@@ -6,8 +6,4 @@
            version="2.5">
     <description>HTML5 Remote Control for Arduino based 2WD Wheel Robot</description>
     <display-name>WebRC</display-name>
-
-    <!--<listener>-->
-        <!--<listener-class>net.ant.rc.web.WebRCContextHolder</listener-class>-->
-    <!--</listener>-->
 </web-app>

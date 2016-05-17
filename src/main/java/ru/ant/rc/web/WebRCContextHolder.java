@@ -1,4 +1,4 @@
-package net.ant.rc.web; /**
+package ru.ant.rc.web; /**
  * Created with IntelliJ IDEA.
  * User: Ant
  * Date: 04.02.13
