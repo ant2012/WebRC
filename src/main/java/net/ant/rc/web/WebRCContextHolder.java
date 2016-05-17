@@ -6,10 +6,10 @@ package net.ant.rc.web; /**
  * To change this template use File | Settings | File Templates.
  */
 
-import net.ant.rc.serial.Command;
-import net.ant.rc.serial.SerialDriver;
-import net.ant.rc.serial.SerialService;
 import org.apache.log4j.Logger;
+import ru.ant.rc.serial.Command;
+import ru.ant.rc.serial.SerialDriver;
+import ru.ant.rc.serial.SerialService;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -41,7 +41,7 @@ public class WebRCContextHolder implements ServletContextListener {
         logger.info("Initialising ServletContext..");
         ServletContext servletContext = sce.getServletContext();
 
-        String workingPath = servletContext.getRealPath("/WEB-INF/classes/.");
+        String workingPath = servletContext.getRealPath("/WEB-INF/classes/");
         workingPath = workingPath.substring(0, workingPath.length()-1);
 
         PriorityBlockingQueue<Command> commandQueue = new PriorityBlockingQueue<Command>();

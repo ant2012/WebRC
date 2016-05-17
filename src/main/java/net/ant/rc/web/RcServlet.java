@@ -1,9 +1,10 @@
 package net.ant.rc.web;
 
-import net.ant.rc.serial.*;
+import ru.ant.rc.serial.*;
 import org.apache.log4j.Logger;
 
 import javax.servlet.ServletContext;
+import javax.servlet.annotation.WebServlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -15,6 +16,7 @@ import java.util.concurrent.PriorityBlockingQueue;
  * Time: 19:09
  * To change this template use File | Settings | File Templates.
  */
+@WebServlet(name = "RcServlet", urlPatterns = {"/servlet"})
 public class RcServlet extends javax.servlet.http.HttpServlet {
     private final Logger logger = Logger.getLogger(this.getClass());
 

@@ -1,6 +1,6 @@
 <%@ page import="net.ant.rc.rpi.Shell" %>
 <%@ page import="net.ant.rc.rpi.RpiState" %>
-<%@ page import="net.ant.rc.serial.*" %>
+<%@ page import="ru.ant.rc.serial.*" %>
 <%@ page import="java.util.concurrent.PriorityBlockingQueue" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
