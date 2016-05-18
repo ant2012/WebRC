@@ -1,5 +1,5 @@
-<%@ page import="ru.ant.rc.rpi.Shell" %>
-<%@ page import="ru.ant.rc.rpi.RpiState" %>
+<%@ page import="ru.ant.iot.rpi.RpiState" %>
+<%@ page import="ru.ant.iot.rpi.Shell" %>
 <%@ page import="ru.ant.rc.serial.*" %>
 <%@ page import="java.util.concurrent.PriorityBlockingQueue" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>

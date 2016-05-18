@@ -7,6 +7,13 @@ package ru.ant.rc.web; /**
  */
 
 import org.apache.log4j.Logger;
+import ru.ant.common.App;
+import ru.ant.common.TriggerPoolManager;
+import ru.ant.common.properties.WebPropertiesManager;
+import ru.ant.iot.cloud.queue.JsonTaskFactory;
+import ru.ant.iot.cloud.queue.JsonTaskTrigger;
+import ru.ant.iot.cloud.queue.RpiTaskFactory;
+import ru.ant.iot.ifttt.NewIpTrigger;
 import ru.ant.rc.serial.Command;
 import ru.ant.rc.serial.SerialDriver;
 import ru.ant.rc.serial.SerialService;
@@ -15,19 +22,24 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
+import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 
 @WebListener
 public class WebRCContextHolder implements ServletContextListener {
 
     //SerialHardwareDetector serialHardwareDetector;
-    SerialDriver serialDriver;
-    SerialService serialService;
+    private SerialDriver serialDriver;
+    private SerialService serialService;
     private final Logger logger;
+
+    private final ScheduledExecutorService pool;
 
     // Public constructor is required by servlet spec
     public WebRCContextHolder() {
         logger = Logger.getLogger(this.getClass());
+        pool = Executors.newScheduledThreadPool(1);
     }
 
     // -------------------------------------------------------
@@ -54,6 +66,13 @@ public class WebRCContextHolder implements ServletContextListener {
 
         Thread serialServiceThread = new Thread(this.serialService);
         serialServiceThread.start();
+
+        App.getInstance().setPropertiesManager(new WebPropertiesManager(sce.getServletContext()));
+
+        TriggerPoolManager.addTrigger(pool, new NewIpTrigger());
+        JsonTaskFactory jsonTaskFactory = new RpiTaskFactory();
+        TriggerPoolManager.addTrigger(pool, new JsonTaskTrigger(jsonTaskFactory));
+
     }
 
     public void contextDestroyed(ServletContextEvent sce) {
@@ -62,8 +81,10 @@ public class WebRCContextHolder implements ServletContextListener {
          Application Server shuts down.
       */
         logger.info("Destroying ServletContext..");
+        pool.shutdown();
         if(this.serialService != null)
             this.serialService.stop();
+        logger.info("ServletContext destroyed..");
     }
 
 }

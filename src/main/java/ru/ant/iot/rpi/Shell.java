@@ -1,4 +1,4 @@
-package ru.ant.rc.rpi;
+package ru.ant.iot.rpi;
 
 import org.apache.log4j.Logger;
 

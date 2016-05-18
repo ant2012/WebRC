@@ -1,12 +1,11 @@
 package ru.ant.rc.web;
 
-import ru.ant.rc.serial.*;
 import org.apache.log4j.Logger;
+import ru.ant.rc.serial.*;
 
 import javax.servlet.ServletContext;
 import javax.servlet.annotation.WebServlet;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.concurrent.PriorityBlockingQueue;
 
 /**
