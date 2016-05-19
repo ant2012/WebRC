@@ -1,6 +1,7 @@
 package ru.ant.iot.rpi;
 
 import org.apache.log4j.Logger;
+import ru.ant.iot.cloud.queue.CloudQueue;
 
 import java.io.IOException;
 
@@ -12,20 +13,24 @@ import java.io.IOException;
  */
 public class Shell {
     public static String execute(String command){
-        Logger logger = Logger.getLogger("log4j.logger.net.ant.rc");
+        Logger logger = Logger.getLogger(Shell.class);
         if (command == null) return null;
 
         String[] c;
-        if ("reboot".equals(command)){
-            c = new String[]{"/usr/bin/sudo", "/sbin/reboot"};
-        }else
-        if ("shutdown".equals(command)){
-            c = new String[]{"/usr/bin/sudo", "/sbin/shutdown", "now"};
-        }else
-        if ("temperature".equals(command)){
-            c = new String[]{"cat", "/sys/class/thermal/thermal_zone0/temp"};
-        }else{
-            return null;
+        switch (command){
+            case "reboot":
+                c = new String[]{"/usr/bin/sudo", "/sbin/reboot"};
+                break;
+            case "shutdown":
+                c = new String[]{"/usr/bin/sudo", "/sbin/shutdown", "now"};
+                break;
+            case "temperature":
+                c = new String[]{"cat", "/sys/class/thermal/thermal_zone0/temp"};
+                break;
+            case "toggleQueueActivity":
+                CloudQueue.toggleActivity();
+                return "Cloud queue monitoring was toggled";
+            default: return null;
         }
 
         try {

@@ -1,5 +1,7 @@
 package ru.ant.iot.cloud.queue;
 
+import org.apache.commons.lang.NotImplementedException;
+
 import javax.json.JsonObject;
 
 /**
@@ -12,7 +14,10 @@ public class RpiTaskFactory extends JsonTaskFactory {
         switch(taskClass){
             case "reboot":
                 return new RebootTask();
+            case "wol":
+                return new WolTask(json);
             default:
+                log.error("Init task error", new NotImplementedException("Task class " + taskClass + " is not supported"));
                 return null;
         }
 

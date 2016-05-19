@@ -1,5 +1,7 @@
 package ru.ant.iot.ifttt;
 
+import org.afraid.freedns.DdnsUpdater;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -41,5 +43,13 @@ public class NewIpTrigger extends IftttTrigger {
             log.error(e);
         }
         return "";
+    }
+
+    @Override
+    protected void sendMessageToIfttt() {
+        super.sendMessageToIfttt();
+        String ddnsResponse = DdnsUpdater.update(preveousMsg.getValue1());
+        if(ddnsResponse!=null)
+            log.info("DDNS Response: " + ddnsResponse);
     }
 }

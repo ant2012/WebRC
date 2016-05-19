@@ -25,6 +25,7 @@ import javax.servlet.annotation.WebListener;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @WebListener
 public class WebRCContextHolder implements ServletContextListener {
@@ -82,8 +83,15 @@ public class WebRCContextHolder implements ServletContextListener {
       */
         logger.info("Destroying ServletContext..");
         pool.shutdown();
+
         if(this.serialService != null)
             this.serialService.stop();
+
+        try {
+            pool.awaitTermination(60, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            logger.error("Pool termination timeout exeeded", e);
+        }
         logger.info("ServletContext destroyed..");
     }
 

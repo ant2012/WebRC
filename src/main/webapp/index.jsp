@@ -2,6 +2,7 @@
 <%@ page import="ru.ant.iot.rpi.Shell" %>
 <%@ page import="ru.ant.rc.serial.*" %>
 <%@ page import="java.util.concurrent.PriorityBlockingQueue" %>
+<%@ page import="ru.ant.iot.cloud.queue.CloudQueue" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="en">
@@ -55,6 +56,7 @@
                     <ul class="dropdown-menu">
                         <li><a href="?command=reboot">Reboot</a></li>
                         <li><a href="?command=shutdown">Shutdown</a></li>
+                        <li><a href="?command=toggleQueueActivity">Switch Queue</a></li>
                     </ul>
                 </li>
             </ul>
@@ -72,6 +74,9 @@
     </div>
     <div class="row">
         <%
+            String command = request.getParameter("command");
+            String shellResult = Shell.execute(command);
+
             final ServletContext servletContext = request.getServletContext();
 
             //Raspberry Info
@@ -183,6 +188,8 @@
             String commandQueueSize = "n/a";
             if(commandQueue != null) commandQueueSize = String.valueOf(commandQueue.size());
 
+            String cloudQueueActivity = (CloudQueue.isEnabled()) ? "Enabled" : "Disabled";
+
         %>
         <div class="col-sm-4">
             <div class="panel panel-primary">
@@ -201,15 +208,14 @@
                     Hardware sensor refresh period:<strong><%out.println(hardwareSensorRefreshPeriod);%></strong><br>
                     Max queue size:<strong><%out.println(serviceMaxQueueSize);%></strong><br>
                     Queue poll wait timeout:<strong><%out.println(servicePollWaitTimeout);%></strong><br>
-                    Service reconnect period:<strong><%out.println(serviceReconnectTimeout);%></strong>
+                    Service reconnect period:<strong><%out.println(serviceReconnectTimeout);%></strong><br>
+                    Cloud Queue monitoring:<strong><%out.println(cloudQueueActivity);%></strong>
                 </div>
             </div>
         </div><!-- /.col-sm-4 -->
     </div>
 
     <%
-        String command = request.getParameter("command");
-        String shellResult = Shell.execute(command);
         if(shellResult != null){
             if(!alertInfoText.equals(""))alertInfoText = alertInfoText + "<br>";
             alertInfoText = alertInfoText + "<strong>Shell result for \"" + command + "\":</strong> " + shellResult;
