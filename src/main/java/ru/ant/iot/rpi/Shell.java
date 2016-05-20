@@ -2,6 +2,7 @@ package ru.ant.iot.rpi;
 
 import org.apache.log4j.Logger;
 import ru.ant.iot.cloud.queue.CloudQueue;
+import ru.ant.rc.serial.SerialService;
 
 import java.io.IOException;
 
@@ -30,6 +31,17 @@ public class Shell {
             case "toggleQueueActivity":
                 CloudQueue.toggleActivity();
                 return "Cloud queue monitoring was toggled";
+            case "switchSerialService":
+                SerialService serialService = SerialService.getInstance();
+                if(serialService.isStopped()){
+                    serialService.start();
+                    return "SerialService scheduled to start";
+                }
+                else{
+                    serialService.stopNowait();
+                    return "SerialService scheduled to stop";
+                }
+
             default: return null;
         }
 

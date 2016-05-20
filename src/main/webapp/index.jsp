@@ -57,6 +57,7 @@
                         <li><a href="?command=reboot">Reboot</a></li>
                         <li><a href="?command=shutdown">Shutdown</a></li>
                         <li><a href="?command=toggleQueueActivity">Switch Queue</a></li>
+                        <li><a href="?command=switchSerialService">Switch SerialService</a></li>
                     </ul>
                 </li>
             </ul>
@@ -112,7 +113,7 @@
         </div><!-- /.col-sm-4 -->
 
         <%  //Arduino info
-            SerialDriver serialDriver = (SerialDriver) servletContext.getAttribute("SerialDriver");
+            SerialDriver serialDriver = SerialService.getInstance().getSerialDriver();
             String alertInfoText = "";
 
             //WebRC info
@@ -134,7 +135,6 @@
             String arduinoTemp = (Double.compare(temperature, Double.NEGATIVE_INFINITY)==0?"n/a":temperature + "C&deg;");
             String arduinoVoltage = (Double.compare(voltage, Double.NEGATIVE_INFINITY)==0?"n/a":voltage + "V");
 
-
         %>
         <div class="col-sm-4">
             <div class="panel panel-primary">
@@ -144,7 +144,8 @@
                 <div class="panel-body">
                     Arduino onboard temperature:<strong><%out.println(arduinoTemp);%></strong><br>
                     Arduino onboard voltage:<strong><%out.println(arduinoVoltage);%></strong><br>
-                    Battery level:<strong><%out.println(batteryLevel);%></strong>
+                    Battery level:<strong><%out.println(batteryLevel);%></strong><br/>
+                    SerialService:<strong><%out.println(SerialService.getInstance().getStatus());%></strong>
                 </div>
             </div>
         </div><!-- /.col-sm-4 -->
@@ -184,7 +185,7 @@
                 if(!alertDangerText.equals(""))alertDangerText = alertDangerText + "<br>";
                 alertDangerText = alertDangerText + "SerialDriver was not initialized! <!--a href=\"/webrc/servlet?do=Init\">Initialize it!</a-->";
             }
-            PriorityBlockingQueue<Command> commandQueue = (PriorityBlockingQueue<Command>) servletContext.getAttribute("CommandQueue");
+            PriorityBlockingQueue<Command> commandQueue = SerialService.getInstance().getCommandQueue();
             String commandQueueSize = "n/a";
             if(commandQueue != null) commandQueueSize = String.valueOf(commandQueue.size());
 
