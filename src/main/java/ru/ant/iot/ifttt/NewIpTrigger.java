@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Created by Ant on 15.05.2016.
  */
-public class NewIpTrigger extends IftttTrigger {
+public class NewIpTrigger extends BaseIftttTrigger {
 
     private final String ADDRESS_TEMPLATE = "172.20";
 

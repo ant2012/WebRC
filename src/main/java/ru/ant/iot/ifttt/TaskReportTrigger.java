@@ -5,7 +5,7 @@ import ru.ant.iot.cloud.queue.JsonTask;
 /**
  * Created by Ant on 15.05.2016.
  */
-public class TaskReportTrigger extends IftttTrigger {
+public class TaskReportTrigger extends BaseIftttTrigger {
 
     private final Class<? extends JsonTask> cls;
 
