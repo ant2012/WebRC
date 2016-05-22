@@ -52,7 +52,7 @@ public class WebRCContextHolder extends Loggable implements ServletContextListen
 
         TriggerPoolManager.addTrigger(pool, new NewIpTrigger());
         JsonTaskFactory jsonTaskFactory = new RpiTaskFactory();
-        TriggerPoolManager.addTrigger(pool, new JsonTaskTrigger(jsonTaskFactory));
+        TriggerPoolManager.addTrigger(pool, new JsonTaskTrigger(App.getProperty("cloud.key"), jsonTaskFactory));
 
     }
 
