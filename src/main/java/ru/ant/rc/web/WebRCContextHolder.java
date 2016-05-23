@@ -6,10 +6,10 @@ package ru.ant.rc.web; /**
  * To change this template use File | Settings | File Templates.
  */
 
+import org.apache.log4j.Logger;
 import ru.ant.common.App;
-import ru.ant.common.Loggable;
-import ru.ant.common.TriggerPoolManager;
 import ru.ant.common.properties.WebPropertiesManager;
+import ru.ant.iot.TriggerPoolManager;
 import ru.ant.iot.cloud.queue.JsonTaskFactory;
 import ru.ant.iot.cloud.queue.JsonTaskTrigger;
 import ru.ant.iot.cloud.queue.RpiTaskFactory;
@@ -25,7 +25,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @WebListener
-public class WebRCContextHolder extends Loggable implements ServletContextListener {
+public class WebRCContextHolder implements ServletContextListener {
+    private Logger log = Logger.getLogger(getClass());
 
     private final ScheduledExecutorService pool;
 

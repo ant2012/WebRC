@@ -8,14 +8,13 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import ru.ant.common.App;
-import ru.ant.common.Loggable;
 
 import java.io.IOException;
 
 /**
  * Created by ant on 19.05.2016.
  */
-public class DdnsUpdater extends Loggable{
+public class DdnsUpdater {
     private final static String URL_TEMPLATE = "http://%1$s:%2$s@freedns.afraid.org/nic/update?hostname=%3$s&myip=%4$s";
     private static Logger log = Logger.getLogger(DdnsUpdater.class);
 

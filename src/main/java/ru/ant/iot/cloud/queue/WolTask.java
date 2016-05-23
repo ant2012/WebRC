@@ -1,6 +1,5 @@
 package ru.ant.iot.cloud.queue;
 
-import ru.ant.common.net.WakeOnLan;
 import ru.ant.iot.ifttt.TaskReportTrigger;
 
 import javax.json.JsonObject;
