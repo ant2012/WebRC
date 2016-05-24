@@ -16,6 +16,8 @@ public class RpiTaskFactory extends JsonTaskFactory {
                 return new RebootTask();
             case "wol":
                 return new WolTask(json);
+            case "snap":
+                return new SnapshotTask();
             default:
                 log.error("Init task error", new NotImplementedException("Task class " + taskClass + " is not supported"));
                 return null;
