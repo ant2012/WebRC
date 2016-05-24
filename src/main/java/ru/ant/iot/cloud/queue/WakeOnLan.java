@@ -12,26 +12,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class WakeOnLan {
-    Logger log = Logger.getLogger(getClass());
-
+    private static Logger log = Logger.getLogger(WakeOnLan.class);
     private static final int PORT = 9;
-    private List<InetAddress> broadcastIpList;
 
-    public WakeOnLan(){
-        broadcastIpList = refreshNetworks();
-    }
-
-    public WakeOnLan(String mac) {
-        this();
-        send(mac);
-    }
-
-    public WakeOnLan(byte[] mac){
-        this();
-        send(mac);
-    }
-
-    public List<InetAddress> refreshNetworks() {
+    private static List<InetAddress> getAllBroadcasts() {
         try {
             Enumeration<NetworkInterface> ethList = NetworkInterface.getNetworkInterfaces();
             Stream<InetAddress> resultStream = null;
@@ -41,33 +25,76 @@ public class WakeOnLan {
                 Stream<InetAddress> partStream = eth.getInterfaceAddresses().stream().filter(f -> f.getBroadcast() != null).map(f -> f.getBroadcast());
                 resultStream = (resultStream == null) ? partStream : Stream.concat(resultStream, partStream);
             }
-            return resultStream.collect(Collectors.toList());
+            return addExtraBroadcasts(resultStream.collect(Collectors.toList()));
         } catch (SocketException e) {
             log.error("Network error", e);
         }
         return new ArrayList<>();
     }
 
-    public void send(String mac){
-        byte[] bytes = getMagicPacket(mac);
-        send(bytes);
+    private static List<InetAddress> addExtraBroadcasts(List<InetAddress> list) {
+        ArrayList<InetAddress> result = new ArrayList<>();
+        for (InetAddress src : list) {
+            result.add(src);
+            InetAddress broadcastIp = getBroadcastForIp(src);
+            if(broadcastIp!=null) result.add(broadcastIp);
+        }
+        return result;
     }
 
-    public void send(byte[] bytes) {
-        for (InetAddress ip : broadcastIpList) {
-            send(ip, bytes);
+    private static InetAddress getBroadcastForIp(InetAddress ip) {
+        InetAddress result = null;
+        byte[] ipBytes = ip.getAddress();
+        if (ipBytes[3]!=(byte)255){
+            ipBytes[3] = (byte) 255;
+            try {
+                result =  InetAddress.getByAddress(ipBytes);
+            } catch (UnknownHostException e) {
+                log.error("Error constructing broadcast for " + ip.getHostAddress(), e);
+            }
+        }
+        return result;
+    }
+
+    public static void send(String mac, String ip){
+        byte[] macBytes = getMagicPacket(mac);
+        send(macBytes);
+        if(ip==null) return;
+        InetAddress addr = parseIp(ip);
+        send(macBytes, addr);
+        send(macBytes, getBroadcastForIp(addr));
+    }
+
+    private static InetAddress parseIp(String ip) {
+        String[] ipParts = ip.split("\\.");
+        if(ipParts.length != 4)
+            throw new IllegalArgumentException("Wrong IP");
+        byte[] result = new byte[4];
+        try{
+            for (int i = 0; i < 4; i++) {
+                result[i] = Integer.valueOf(ipParts[i]).byteValue();
+            }
+            return InetAddress.getByAddress(result);
+        }catch(NumberFormatException | UnknownHostException e){
+            throw new IllegalArgumentException("Wrong IP", e);
         }
     }
 
-    private void send(InetAddress br, byte[] mac) {
+    private static void send(byte[] mac) {
+        for (InetAddress broadcastIp : getAllBroadcasts()) {
+            send(mac, broadcastIp);
+        }
+    }
 
+    private static void send(byte[] mac, InetAddress ip) {
+        if(ip==null) return;
         try {
-            DatagramPacket packet = new DatagramPacket(mac, mac.length, br, PORT);
+            DatagramPacket packet = new DatagramPacket(mac, mac.length, ip, PORT);
             DatagramSocket socket = new DatagramSocket();
             socket.send(packet);
             socket.close();
 
-            log.info("Wake-on-LAN packet sent to " + br.getHostAddress());
+            log.info("Wake-on-LAN packet sent to " + ip.getHostAddress());
 
         } catch (Exception e) {
             log.error("Failed to send Wake-on-LAN packet", e);
@@ -75,7 +102,7 @@ public class WakeOnLan {
 
     }
 
-    public static byte[] getMagicPacket(String macString) {
+    private static byte[] getMagicPacket(String macString) {
         String clearMac = macString.replaceAll("(?i)[^0-9A-F]", "");
 
         if (clearMac.length() != 12)
@@ -91,5 +118,9 @@ public class WakeOnLan {
             throw new IllegalArgumentException("Invalid hex digit in MAC address.");
         }
 
+    }
+
+    public static void send(String mac) {
+        send(mac, null);
     }
 }
