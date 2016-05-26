@@ -1,31 +1,35 @@
 package ru.ant.iot.cloud.queue;
 
-import com.flickr4java.flickr.Flickr;
 import com.flickr4java.flickr.FlickrException;
-import com.flickr4java.flickr.REST;
-import com.flickr4java.flickr.RequestContext;
-import com.flickr4java.flickr.auth.Auth;
-import com.flickr4java.flickr.auth.AuthInterface;
-import com.flickr4java.flickr.uploader.UploadMetaData;
 import com.github.sarxos.webcam.Webcam;
-import org.scribe.model.Token;
-import org.scribe.model.Verifier;
-import ru.ant.common.App;
-import ru.ant.iot.ifttt.TaskReportTrigger;
-import ru.ant.iot.rpi.Shell;
+import com.github.sarxos.webcam.ds.fswebcam.FsWebcamDriver;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.*;
-import java.nio.ByteBuffer;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 
 /**
  * Created by ant on 17.05.2016.
  */
 public class SnapshotTask extends JsonTask {
+    static{
+        Webcam.setDriver(new FsWebcamDriver());
+    }
     @Override
     public void execute() {
-        Webcam webcam = Webcam.getDefault();
+        List<Webcam> cams = Webcam.getWebcams();
+        cams.forEach(c -> log.info(c.getName()));
+        if(cams.size() == 0) {
+            log.error("No camera detected!");
+            return;
+        }
+        Webcam webcam = cams.get(0);
+        webcam.setViewSize(new Dimension(640, 480));
         try{
             webcam.open();
             try {
