@@ -82,6 +82,8 @@
 
         //make sure we scroll to the top left.
         window.scrollTo(0,0);
+        canvas.style.background = "url(http://"+window.location.hostname+":8000/?action=stream) no-repeat center";
+        canvas.style.backgroundSize = "contain";
     }
 
     function draw() {

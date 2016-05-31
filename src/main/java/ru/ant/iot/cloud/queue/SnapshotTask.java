@@ -3,6 +3,7 @@ package ru.ant.iot.cloud.queue;
 import com.flickr4java.flickr.FlickrException;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.ds.fswebcam.FsWebcamDriver;
+import ru.ant.iot.ifttt.TaskReportTrigger;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -22,6 +23,7 @@ public class SnapshotTask extends JsonTask {
     }
     @Override
     public void execute() {
+
         List<Webcam> cams = Webcam.getWebcams();
         cams.forEach(c -> log.info(c.getName()));
         if(cams.size() == 0) {
@@ -52,6 +54,7 @@ public class SnapshotTask extends JsonTask {
             webcam.close();
         }
 
+        new TaskReportTrigger(getClass()).run();
         log.info("Snapshot task done");
     }
 }

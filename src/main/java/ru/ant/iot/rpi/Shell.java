@@ -14,7 +14,6 @@ import java.io.IOException;
  */
 public class Shell {
     public static String execute(String command){
-        Logger logger = Logger.getLogger(Shell.class);
         if (command == null) return null;
 
         String[] c;
@@ -45,6 +44,11 @@ public class Shell {
             default: return null;
         }
 
+        return execute(c);
+    }
+
+    public static String execute(String[] c) {
+        Logger logger = Logger.getLogger(Shell.class);
         try {
             Process p = Runtime.getRuntime().exec(c);
             byte[] buf = new byte[500];
@@ -54,7 +58,9 @@ public class Shell {
             }else{
                 p.getInputStream().read(buf);
             }
-            return new String(buf);
+            String result = new String(buf);
+            logger.info(result);
+            return result;
         } catch (IOException e) {
             logger.error(e.getMessage());
             return e.getMessage();

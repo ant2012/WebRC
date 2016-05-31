@@ -27,8 +27,8 @@ public class RcServlet extends javax.servlet.http.HttpServlet {
         //SerialService may be stopped (In case of start failure)
         if (commandQueue == null) return;
 
-        int x = Integer.valueOf(request.getParameter("x"));
-        int y = Integer.valueOf(request.getParameter("y"));
+        int x = Integer.valueOf(request.getParameter("x").replaceAll("[\\.,].*", ""));
+        int y = Integer.valueOf(request.getParameter("y").replaceAll("[\\.,].*", ""));
         String commandType = request.getParameter("type");
         long timeMillis = Long.valueOf(request.getParameter("milliseconds"));
 

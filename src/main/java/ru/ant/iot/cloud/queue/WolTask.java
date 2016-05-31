@@ -14,10 +14,12 @@ public class WolTask extends JsonTask {
 
     @Override
     public void execute() {
-        new TaskReportTrigger(getClass()).run();
         String mac = json.getString("mac");
-        String ip = json.getString("ip");
+        String ip = null;
+        if(json.containsKey("ip"))
+            ip = json.getString("ip");
         WakeOnLan.send(mac, ip);
+        new TaskReportTrigger(getClass(), String.format("[mac=%1$s; ip=%2$s]", mac, ip)).run();
         log.info("WOL sent to MAC=" + mac + ";IP=" + ip);
     }
 }
