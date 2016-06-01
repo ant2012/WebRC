@@ -1,4 +1,4 @@
-package ru.ant.iot.cloud.queue;
+package ru.ant.iot.utils;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;

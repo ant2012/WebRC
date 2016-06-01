@@ -30,16 +30,16 @@ public class Shell {
             case "toggleQueueActivity":
                 CloudQueue.toggleActivity();
                 return "Cloud queue monitoring was toggled";
-            case "switchSerialService":
-                SerialService serialService = SerialService.getInstance();
-                if(serialService.isStopped()){
-                    serialService.start();
-                    return "SerialService scheduled to start";
-                }
-                else{
-                    serialService.stopNowait();
-                    return "SerialService scheduled to stop";
-                }
+//            case "switchSerialService":
+//                SerialService serialService = SerialService.getInstance();
+//                if(serialService.isStopped()){
+//                    serialService.start();
+//                    return "SerialService scheduled to start";
+//                }
+//                else{
+//                    serialService.stopNowait();
+//                    return "SerialService scheduled to stop";
+//                }
 
             default: return null;
         }

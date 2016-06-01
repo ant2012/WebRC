@@ -1,4 +1,4 @@
-package org.afraid.freedns;
+package ru.ant.iot.utils;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.HttpClient;
@@ -19,9 +19,9 @@ public class DdnsUpdater {
     private static Logger log = Logger.getLogger(DdnsUpdater.class);
 
     public static String update(String ip){
-        String login = App.getProperty("org.afraid.freedns.DdnsUpdater.login");
-        String password = App.getProperty("org.afraid.freedns.DdnsUpdater.password");
-        String domain = App.getProperty("org.afraid.freedns.DdnsUpdater.domain");
+        String login = App.getProperty("DdnsUpdater.login");
+        String password = App.getProperty("DdnsUpdater.password");
+        String domain = App.getProperty("DdnsUpdater.domain");
         String url = String.format(URL_TEMPLATE, login, password, domain, ip);
 
         HttpClient client = HttpClientBuilder.create().build();

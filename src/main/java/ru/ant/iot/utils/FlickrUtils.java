@@ -1,4 +1,4 @@
-package ru.ant.iot.cloud.queue;
+package ru.ant.iot.utils;
 
 import com.flickr4java.flickr.Flickr;
 import com.flickr4java.flickr.FlickrException;

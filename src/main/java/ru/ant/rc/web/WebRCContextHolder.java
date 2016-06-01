@@ -66,7 +66,7 @@ public class WebRCContextHolder implements ServletContextListener {
 
         pool.shutdown();
 
-        SerialService.getInstance().stop();
+        SerialService.getInstance().destroy();
 
         try {
             pool.awaitTermination(60, TimeUnit.SECONDS);

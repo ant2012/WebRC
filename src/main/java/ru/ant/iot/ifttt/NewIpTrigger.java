@@ -1,6 +1,6 @@
 package ru.ant.iot.ifttt;
 
-import org.afraid.freedns.DdnsUpdater;
+import ru.ant.iot.utils.DdnsUpdater;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;

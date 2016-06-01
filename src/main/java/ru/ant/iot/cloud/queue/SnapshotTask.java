@@ -4,6 +4,7 @@ import com.flickr4java.flickr.FlickrException;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.ds.fswebcam.FsWebcamDriver;
 import ru.ant.iot.ifttt.TaskReportTrigger;
+import ru.ant.iot.utils.FlickrUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
