@@ -1,7 +1,7 @@
 package ru.ant.iot.cloud.queue;
 
 import ru.ant.iot.ifttt.TaskReportTrigger;
-import ru.ant.iot.rpi.Shell;
+import ru.ant.iot.rpi.MjpgStreamer;
 
 import javax.json.JsonObject;
 
@@ -19,20 +19,10 @@ public class StreamTask extends JsonTask {
         String resolution = (json.containsKey("resolution"))?json.getString("resolution"):null;
         String framerate = (json.containsKey("framerate"))?json.getString("framerate"):null;
 
-        log.info("Stopping MJPG-streamer..");
-        String[] c = new String[]{"/home/pi/mjpg-streamer/mjpg-streamer.sh", "stop"};
-        Shell.execute(c);
-
-        log.info("Starting MJPG-streamer with resolution=["+resolution+"] and framerate=["+framerate+"]..");
-        c = new String[]{"/home/pi/mjpg-streamer/mjpg-streamer.sh", "start", "", ""};
-
-        if(resolution!=null)
-            c[2] = resolution;
-        if(framerate!=null)
-            c[3] = framerate;
-
-        Shell.execute(c);
+        MjpgStreamer.stop();
+        MjpgStreamer.start(resolution, framerate);
 
         new TaskReportTrigger(getClass(), String.format("[%1$s %2$s]", resolution, framerate)).run();
     }
+
 }

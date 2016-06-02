@@ -10,10 +10,9 @@ import org.apache.log4j.Logger;
 import ru.ant.common.App;
 import ru.ant.common.properties.WebPropertiesManager;
 import ru.ant.iot.TriggerPoolManager;
-import ru.ant.iot.cloud.queue.JsonTaskFactory;
-import ru.ant.iot.cloud.queue.JsonTaskTrigger;
-import ru.ant.iot.cloud.queue.RpiTaskFactory;
+import ru.ant.iot.cloud.queue.*;
 import ru.ant.iot.ifttt.NewIpTrigger;
+import ru.ant.iot.rpi.MjpgStreamer;
 import ru.ant.rc.serial.Config;
 import ru.ant.rc.serial.SerialService;
 
@@ -49,12 +48,11 @@ public class WebRCContextHolder implements ServletContextListener {
         propertiesManager.addFile(Config.FILE_NAME);
         App.getInstance().setPropertiesManager(propertiesManager);
 
-//        SerialService.getInstance().start();
-
         TriggerPoolManager.addTrigger(pool, new NewIpTrigger());
         JsonTaskFactory jsonTaskFactory = new RpiTaskFactory();
         TriggerPoolManager.addTrigger(pool, new JsonTaskTrigger(App.getProperty("cloud.key"), jsonTaskFactory));
 
+        MjpgStreamer.start("320x240", "5");
     }
 
     public void contextDestroyed(ServletContextEvent sce) {
@@ -73,6 +71,8 @@ public class WebRCContextHolder implements ServletContextListener {
         } catch (InterruptedException e) {
             log.error("Pool termination timeout exeeded", e);
         }
+
+        MjpgStreamer.stop();
 
         log.info("ServletContext destroyed..");
     }
