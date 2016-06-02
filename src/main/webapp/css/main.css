@@ -11,12 +11,17 @@ body {
     background-color: #000000;
     margin: 0px;
 }
+.header {
+    width: 100%;
+    padding-top: .5em;
+}
+
+.container {
+    width: 100%;
+    text-align:center;
+}
 canvas {
     display:block;
-    position:absolute;
-}
-.container {
-    width:auto;
-    text-align:center;
-    background-color:#ff0000;
+    height: 100%;
+    width: 100%;
 }

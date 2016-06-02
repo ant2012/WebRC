@@ -3,6 +3,8 @@
 <%@ page import="ru.ant.rc.serial.*" %>
 <%@ page import="java.util.concurrent.PriorityBlockingQueue" %>
 <%@ page import="ru.ant.iot.cloud.queue.CloudQueue" %>
+<%@ page import="java.util.Date" %>
+<%@ page import="org.apache.commons.lang.time.DateFormatUtils" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,7 +26,8 @@
     <link href="http://getbootstrap.com/examples/theme/theme.css" rel="stylesheet">
 
     <!-- Just for debugging purposes. Don't actually copy this line! -->
-    <!--[if lt IE 9]><script src="http://getbootstrap.com/docs-assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <!--[if lt IE 9]>
+    <script src="http://getbootstrap.com/docs-assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -50,14 +53,12 @@
             <ul class="nav navbar-nav">
                 <li class="active"><a href="/webrc/">Home</a></li>
                 <li><a href="tractorRC.html">TractorRC</a></li>
-                <li><a href="vectorRC.html">VectorRC</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">RPi <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                         <li><a href="?command=reboot">Reboot</a></li>
                         <li><a href="?command=shutdown">Shutdown</a></li>
                         <li><a href="?command=toggleQueueActivity">Switch Queue</a></li>
-                        <li><a href="?command=switchSerialService">Switch SerialService</a></li>
                     </ul>
                 </li>
             </ul>
@@ -71,7 +72,8 @@
     <div class="jumbotron">
         <h1>HelloMaster!</h1>
         <p>You are on WebRC Home. Here you can monitor and control your Robot.</p>
-        <p><a href="tractorRC.html" title="Runs Tractor-style control as Default" class="btn btn-primary btn-lg" role="button">Let's drive! &raquo;</a></p>
+        <p><a href="tractorRC.html" title="Runs Tractor-style control as Default" class="btn btn-primary btn-lg"
+              role="button">Let's drive! &raquo;</a></p>
     </div>
     <div class="row">
         <%
@@ -83,10 +85,10 @@
             //Raspberry Info
             RpiState rpiState;
             Object o = servletContext.getAttribute("RpiState");
-            if (o == null){
+            if (o == null) {
                 rpiState = new RpiState(servletContext);
                 servletContext.setAttribute("RpiState", rpiState);
-            }else{
+            } else {
                 rpiState = (RpiState) o;
                 rpiState.refresh();
             }
@@ -120,20 +122,32 @@
             double voltage = Double.NEGATIVE_INFINITY;
             double temperature = Double.NEGATIVE_INFINITY;
             String batteryLevel = "n/a";
-            if(serialDriver != null){
+            String fwVersion = null;
+            int sketchSize = -1;
+            Date buildDate = null;
+            int upTime = 0;
+            if (serialDriver != null) {
                 ArduinoState arduinoState = serialDriver.getArduinoState();
-                if(arduinoState != null){
+                if (arduinoState != null) {
                     temperature = arduinoState.getTemperature() / 1000;
                     Battery battery = arduinoState.getBattery();
-                    if(battery != null){
+                    if (battery != null) {
                         batteryLevel = String.valueOf(battery.checkVoltageLevel()) + "%";
                         voltage = battery.getCurrentVoltage() / 1000;
                     }
+                    fwVersion = arduinoState.getFirmwareVersion();
+                    sketchSize = arduinoState.getSketchSize();
+                    buildDate = arduinoState.getBuildDate();
+                    upTime = arduinoState.getUpTime();
                     //arduinoState.
                 }
             }
-            String arduinoTemp = (Double.compare(temperature, Double.NEGATIVE_INFINITY)==0?"n/a":temperature + "C&deg;");
-            String arduinoVoltage = (Double.compare(voltage, Double.NEGATIVE_INFINITY)==0?"n/a":voltage + "V");
+            String arduinoTemp = (Double.compare(temperature, Double.NEGATIVE_INFINITY) == 0 ? "n/a" : temperature + "&deg;C");
+            String arduinoVoltage = (Double.compare(voltage, Double.NEGATIVE_INFINITY) == 0 ? "n/a" : voltage + "V");
+            String fwVersionStr = (fwVersion == null) ? "n/a" : fwVersion;
+            String sketchSizeStr = (sketchSize < 0) ? "n/a" : String.valueOf(sketchSize)+"B";
+            String buildDateStr = (buildDate == null) ? "n/a" : DateFormatUtils.format(buildDate, "MMM d yyyy HH:mm:ss");
+            String upTimeStr = (upTime < 0) ? "n/a" : String.valueOf(upTime)+"ms";
 
         %>
         <div class="col-sm-4">
@@ -145,6 +159,10 @@
                     Arduino onboard temperature:<strong><%out.println(arduinoTemp);%></strong><br>
                     Arduino onboard voltage:<strong><%out.println(arduinoVoltage);%></strong><br>
                     Battery level:<strong><%out.println(batteryLevel);%></strong><br/>
+                    FW version:<strong><%out.println(fwVersionStr);%></strong><br/>
+                    Sketch size:<strong><%out.println(sketchSizeStr);%></strong><br/>
+                    Build date:<strong><%out.println(buildDateStr);%></strong><br/>
+                    Up time:<strong><%out.println(upTimeStr);%></strong><br/>
                     SerialService:<strong><%out.println(SerialService.getInstance().getStatus());%></strong>
                 </div>
             </div>
@@ -161,33 +179,33 @@
             String serviceMaxQueueSize = "n/a";
             String servicePollWaitTimeout = "n/a";
             String serviceReconnectTimeout = "n/a";
-            if(serialDriver != null){
+            if (serialDriver != null) {
                 SerialConnection connection = serialDriver.getSerialConnection();
-                if(connection != null) serialPortName = connection.getPortName();
+                if (connection != null) serialPortName = connection.getPortName();
 
                 serialDriverClass = serialDriver.getClass().getSimpleName();
                 Config conf = serialDriver.getConfig();
 
-                if(conf != null){
-                    batteryMin = String.valueOf(Double.parseDouble(conf.getOption(Config.BATTERY_MIN_VOLTAGE))/1000) + "V";
-                    batteryMax = String.valueOf(Double.parseDouble(conf.getOption(Config.BATTERY_MAX_VOLTAGE))/1000) + "V";
-                    serialListenerTimeout = String.valueOf(Double.parseDouble(conf.getOption(Config.SERIAL_LISTENER_TIMEOUT))/1000) + "s";
-                    serialPortInternalTimeout = String.valueOf(Double.parseDouble(conf.getOption(Config.COMM_PORT_INTERNAL_TIMEOUT))/1000) + "s";
-                    hardwareSensorRefreshPeriod = String.valueOf(Double.parseDouble(conf.getOption(Config.STATE_REFRESH_PERIOD))/1000) + "s";
+                if (conf != null) {
+                    batteryMin = String.valueOf(Double.parseDouble(conf.getOption(Config.BATTERY_MIN_VOLTAGE)) / 1000) + "V";
+                    batteryMax = String.valueOf(Double.parseDouble(conf.getOption(Config.BATTERY_MAX_VOLTAGE)) / 1000) + "V";
+                    serialListenerTimeout = String.valueOf(Double.parseDouble(conf.getOption(Config.SERIAL_LISTENER_TIMEOUT)) / 1000) + "s";
+                    serialPortInternalTimeout = String.valueOf(Double.parseDouble(conf.getOption(Config.COMM_PORT_INTERNAL_TIMEOUT)) / 1000) + "s";
+                    hardwareSensorRefreshPeriod = String.valueOf(Double.parseDouble(conf.getOption(Config.STATE_REFRESH_PERIOD)) / 1000) + "s";
                     serviceMaxQueueSize = conf.getOption(Config.SERVICE_MAX_QUEUE_SIZE);
-                    servicePollWaitTimeout = String.valueOf(Double.parseDouble(conf.getOption(Config.SERVICE_POLL_WAIT_TIMEOUT))/1000) + "s";
-                    serviceReconnectTimeout = String.valueOf(Double.parseDouble(conf.getOption(Config.SERVICE_RECONNECT_TIMEOUT))/1000) + "s";
+                    servicePollWaitTimeout = String.valueOf(Double.parseDouble(conf.getOption(Config.SERVICE_POLL_WAIT_TIMEOUT)) / 1000) + "s";
+                    serviceReconnectTimeout = String.valueOf(Double.parseDouble(conf.getOption(Config.SERVICE_RECONNECT_TIMEOUT)) / 1000) + "s";
 
                 }
 
                 alertInfoText = "Arduino2WD Robot successfully connected trough the " + serialPortName;
-            }else{
-                if(!alertDangerText.equals(""))alertDangerText = alertDangerText + "<br>";
+            } else {
+                if (!alertDangerText.equals("")) alertDangerText = alertDangerText + "<br>";
                 alertDangerText = alertDangerText + "SerialDriver was not initialized! <!--a href=\"/webrc/servlet?do=Init\">Initialize it!</a-->";
             }
             PriorityBlockingQueue<Command> commandQueue = SerialService.getInstance().getCommandQueue();
             String commandQueueSize = "n/a";
-            if(commandQueue != null) commandQueueSize = String.valueOf(commandQueue.size());
+            if (commandQueue != null) commandQueueSize = String.valueOf(commandQueue.size());
 
             String cloudQueueActivity = (CloudQueue.isEnabled()) ? "Enabled" : "Disabled";
 
@@ -217,18 +235,18 @@
     </div>
 
     <%
-        if(shellResult != null){
-            if(!alertInfoText.equals(""))alertInfoText = alertInfoText + "<br>";
+        if (shellResult != null) {
+            if (!alertInfoText.equals("")) alertInfoText = alertInfoText + "<br>";
             alertInfoText = alertInfoText + "<strong>Shell result for \"" + command + "\":</strong> " + shellResult;
         }
-        if(!alertDangerText.equals("")){
+        if (!alertDangerText.equals("")) {
             String alert =
                     "<div class=\"alert alert-danger\">\n" +
                             "    " + alertDangerText +
                             "</div>";
             out.println(alert);
         }
-        if(!alertInfoText.equals("")){
+        if (!alertInfoText.equals("")) {
             String alert =
                     "<div class=\"alert alert-info\">\n" +
                             "    " + alertInfoText +

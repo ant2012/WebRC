@@ -4,12 +4,21 @@
     <meta charset=utf-8>
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>WebRC :: HTML5 based remote control for mobile robot platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
-    <script type="text/javascript" src="js/jquery-1.9.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+
+    <script src="js/Vector2.js"></script>
+    <script src="js/ServletCommunicator.js"></script>
 </head>
 <body>
-<script src="js/Vector2.js"></script>
-<script src="js/ServletCommunicator.js"></script>
+<div class="header">
+    <a href="/webrc/">Home</a>
+    <a onclick="goFullscreen()">Fullscreen</a>
+</div>
+</body>
+</html>
 <script>
     var canvas;
     var c; // c is the canvas' context 2D
@@ -28,32 +37,59 @@
 
     var servletCommunicator = new ServletCommunicator();
 
-
-    setupCanvas();
-
     // is this running in a touch capable environment?
     var touchable = 'createTouch' in document;
     var touches = []; // array of touch vectors
 
+    $(function () {
+        $('a').button();
+        setupCanvas();
 
-    setInterval(draw, 1000/35);
-    servletCommunicator.sendTractor(new Vector2(0, 0));
-    setInterval(pingServlet, 1000);
+        setInterval(draw, 1000/35);
+        servletCommunicator.sendTractor(new Vector2(0, 0));
+        setInterval(pingServlet, 1000);
 
-    if(touchable) {
-        canvas.addEventListener( 'touchstart', onTouchStart, false );
-        canvas.addEventListener( 'touchmove', onTouchMove, false );
-        canvas.addEventListener( 'touchend', onTouchEnd, false );
-        window.onorientationchange = resetCanvas;
-        window.onresize = resetCanvas;
-    } else {
-        //canvas.addEventListener( 'mousedown', onMouseDown, false );
-        //canvas.addEventListener( 'mousemove', onMouseMove, false );
-        //canvas.addEventListener( 'mouseup'  , onMouseUp  , false );
-    }
+        if(touchable) {
+            canvas.addEventListener( 'touchstart', onTouchStart, false );
+            canvas.addEventListener( 'touchmove', onTouchMove, false );
+            canvas.addEventListener( 'touchend', onTouchEnd, false );
+            window.onorientationchange = resetCanvas();
+            window.onresize = resetCanvas();
+        } else {
+            //canvas.addEventListener( 'mousedown', onMouseDown, false );
+            //canvas.addEventListener( 'mousemove', onMouseMove, false );
+            //canvas.addEventListener( 'mouseup'  , onMouseUp  , false );
+        }
+    })
 
     function pingServlet(){
         servletCommunicator.sendLastTractor();
+    }
+
+    function isFullScreen() {
+        if(document.fullscreenEnabled) {
+            return document.fullscreenElement == container;
+        } else if(document.mozFullscreenEnabled) {
+            return document.mozFullscreenElement == container;
+        } else if(document.webkitFullscreenEnabled) {
+            return document.webkitFullscreenElement == container;
+        }
+    }
+
+    function launchFullScreen(element) {
+        if(document.fullscreenEnabled) {
+            element.requestFullScreen();
+        } else if(document.mozFullscreenEnabled) {
+            element.mozRequestFullScreen();
+        } else if(document.webkitFullscreenEnabled) {
+            element.webkitRequestFullScreen();
+        }
+    }
+
+    function goFullscreen(){
+//        container.webkitRequestFullScreen();
+        launchFullScreen(canvas);
+        resetCanvas();
     }
 
     function setupCanvas() {
@@ -75,13 +111,17 @@
     function resetCanvas (e) {
         // resize the canvas - but remember - this clears the canvas too.
         canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+
+        var h = window.innerHeight;
+        if(!isFullScreen()) h -= $(".header").outerHeight(true);
+        canvas.height = h;
 
         halfWidth = canvas.width/2;
         halfHeight = canvas.height/2;
 
         //make sure we scroll to the top left.
         window.scrollTo(0,0);
+//        canvas.style.background = "url(http://rpi.msensk.ru:8000/?action=snapshot) no-repeat center";
         canvas.style.background = "url(http://"+window.location.hostname+":8000/?action=stream) no-repeat center";
         canvas.style.backgroundSize = "contain";
     }
@@ -130,7 +170,7 @@
                 }
             }
         }
-   }
+    }
 
     function onTouchStart(e) {
         for(var i = 0; i<e.changedTouches.length; i++){
@@ -203,5 +243,3 @@
     }
 
 </script>
-</body>
-</html>
