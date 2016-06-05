@@ -41,6 +41,12 @@ public class Shell {
 //                    return "SerialService scheduled to stop";
 //                }
 
+            case "soundStart":
+                c = new String[]{"/home/pi/sound.sh", "start"};
+                break;
+            case "soundStop":
+                c = new String[]{"/home/pi/sound.sh", "stop"};
+                break;
             default: return null;
         }
 

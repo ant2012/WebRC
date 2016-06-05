@@ -53,6 +53,7 @@
             <ul class="nav navbar-nav">
                 <li class="active"><a href="/webrc/">Home</a></li>
                 <li><a href="tractorRC.html">TractorRC</a></li>
+                <li><a href="sound.html">Sound</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">RPi <b class="caret"></b></a>
                     <ul class="dropdown-menu">
