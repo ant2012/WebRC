@@ -45,7 +45,9 @@ public class SoundServlet extends HttpServlet {
                 Shell.execute("soundStop");
                 break;
         }
-        response.addHeader("Access-Control-Allow-Origin", "*");
+
+        //TODO: Uncomment for remote debug
+//        response.addHeader("Access-Control-Allow-Origin", "*");
 
     }
 }

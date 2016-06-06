@@ -3,41 +3,143 @@
 <head>
     <meta charset=utf-8>
     <title>WebRC :: Sound control</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 </head>
+<style>
+    div {
+        padding-bottom: 1em;
+    }
+</style>
 <body>
-    <audio controls preload="none">
-        <source  src=""/>
-        Not supportet in this browser
-    </audio>
+    <div id="buttons">
+        <a id="homeBtn" href="/webrc">Home</a>
+    </div>
+    <div id="control"></div>
+    <div id="event"></div>
+    <div id="status"></div>
+    <!--<audio controls preload="none">-->
+        <!--<source  src=""/>-->
+        <!--Not supportet in this browser-->
+    <!--</audio>-->
 </body>
 </html>
 <script>
+//    var streamSrc = 'http://rpi-local.msensk.ru:8090/sound.wav';
+//    var servletUrl = 'http://rpi-local.msensk.ru:8080/webrc/soundServlet?command=';
+
+//    var streamSrc = 'http://rpi.msensk.ru:8090/sound.wav';
+//    var servletUrl = 'http://rpi.msensk.ru:8080/webrc/soundServlet?command=';
+
+    var streamSrc = 'http://'+window.location.hostname+':8090/sound.wav';
+    var servletUrl = '/webrc/soundServlet?command=';
+
     $(function () {
-        var audio = $('audio')[0];
-        var streamStarted = false;
-
-        var streamSrc = 'http://rpi-local.msensk.ru:8090/sound.wav';
-        var servletUrl = 'http://rpi-local.msensk.ru:8080/webrc/soundServlet?command=';
-
-//        var streamSrc = 'http://'+window.location.hostname+':8090/sound.wav';
-//        var servletUrl = '/webrc/soundServlet?command=';
-        $('audio').children().attr('src', streamSrc);
-
-//        startStream(servletUrl);
-        $.post(servletUrl + 'start');
-
-        $('audio').on('pause', function () {
-            $.post(servletUrl + 'stop', function () {
-                $('audio')[0].currentTime = 0;
-            });
+        $('#homeBtn').button();
+        setStatus('Initializing media server..');
+        $.post(servletUrl + 'start', function () {
+            createAudio();
         });
 
     })
 
-//    function startStream(servletUrl){
-//        $.post(servletUrl + 'start', function () {
-//            $('audio')[0].play();
-//        });
-//    }
+    function setStatus(statusText){
+        $('#status').empty();
+        $('#status').append(statusText);
+    }
+
+    function setEvent(eventText){
+        $('#event').empty();
+        $('#event').append(eventText);
+    }
+    function createAudio(){
+        setStatus();
+        $('#initBtn').remove();
+
+        var audio = $('<audio/>', {
+            id: 'audio',
+            controls: true,
+            preload: 'none'
+        });
+        $('#control').append(audio);
+
+        $('<source/>', {
+            src: streamSrc
+        }).appendTo(audio);
+
+        $(audio).append('HTML5 Audio is not supported in your browser');
+
+        $(audio).on('abort durationchange error loadeddata loadedmetadata loadstart playing stalled suspend waiting ratechange pause seeked', function (event) {
+            var eventText = event.type + '...<br>';
+            setEvent(eventText);
+            console.log(event.type);
+        });
+
+        $(audio).on('abort durationchange error loadeddata loadedmetadata loadstart playing stalled suspend waiting ratechange pause seeked progress timeupdate', function (event) {
+            var o = event.target;
+            var statusText = '';
+
+            if(o.duration)
+                statusText += 'duration: '+ o.duration + '<br>';
+
+            if(o.buffered.length == 0) statusText += 'buffered[0]<br>';
+            for (var i=0; i<o.buffered.length; i++){
+                statusText += 'buffered['+ i +']: ' + o.buffered.start(0)+' - '+o.buffered.end(0)+'<br>';
+            }
+
+            statusText += 'currentTime: ' + o.currentTime + '<br>';
+            statusText += 'networkState: ' + o.networkState + '<br>';
+
+            setStatus(statusText);
+        });
+
+        $(audio).on('stalled', function (event) {
+            event.target.load();
+        });
+
+        $(audio).on('suspend', function (event) {
+            event.target.play();
+        });
+
+        var stopBtn = $('<a/>', {
+            id: 'stopBtn',
+            href: '#'
+        });
+        $('#buttons').append(stopBtn);
+
+        $(stopBtn).button({
+            label: 'Stop'
+        });
+
+        $(stopBtn).click(function () {
+            $(stopBtn).button('disable');
+            setEvent();
+            setStatus('Stopping media server..');
+//            $(audio)[0].pause();
+            $(audio).remove();
+            $.post(servletUrl + 'stop', function () {
+                $(stopBtn).remove();
+                var initBtn = $('<a/>', {
+                    id: 'initBtn',
+                    href: '#'
+                });
+                $('#buttons').append(initBtn);
+
+                $(initBtn).button({
+                    label: 'Init'
+                });
+
+                $(initBtn).click(function () {
+                    $(initBtn).button('disable');
+                    setStatus('Initializing media server..');
+                    $.post(servletUrl + 'start', function () {
+                        createAudio();
+                    });
+                });
+                setStatus();
+
+            });
+        })
+    }
 </script>
