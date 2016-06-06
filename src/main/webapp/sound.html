@@ -14,19 +14,30 @@
 </html>
 <script>
     $(function () {
-        $.ajax('/webrc/soundServlet?command=start', {async: false});
-        $(window).on('unload', function () {
-            onUnload();
-        });
-//        var streamSrc = 'http://rpi-local.msensk.ru:8090/test.mp3';
-        var streamSrc = 'http://'+window.location.hostname+':8090/test.mp3';
-        $('audio').children().attr('src', streamSrc);
-        $('audio')[0].play();
+        var audio = $('audio')[0];
+        var streamStarted = false;
 
+        var streamSrc = 'http://rpi-local.msensk.ru:8090/sound.wav';
+        var servletUrl = 'http://rpi-local.msensk.ru:8080/webrc/soundServlet?command=';
+
+//        var streamSrc = 'http://'+window.location.hostname+':8090/sound.wav';
+//        var servletUrl = '/webrc/soundServlet?command=';
+        $('audio').children().attr('src', streamSrc);
+
+//        startStream(servletUrl);
+        $.post(servletUrl + 'start');
+
+        $('audio').on('pause', function () {
+            $.post(servletUrl + 'stop', function () {
+                $('audio')[0].currentTime = 0;
+            });
+        });
 
     })
 
-    function onUnload(){
-        $.ajax('/webrc/soundServlet?command=stop', {async: false});
-    }
+//    function startStream(servletUrl){
+//        $.post(servletUrl + 'start', function () {
+//            $('audio')[0].play();
+//        });
+//    }
 </script>
