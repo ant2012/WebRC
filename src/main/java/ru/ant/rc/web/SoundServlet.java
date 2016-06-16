@@ -1,13 +1,17 @@
 package ru.ant.rc.web;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import ru.ant.iot.rpi.Shell;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sound.sampled.*;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 /**
@@ -43,6 +47,28 @@ public class SoundServlet extends HttpServlet {
                 break;
             case "stop":
                 Shell.execute("soundStop");
+                break;
+            case "send":
+                try {
+                    ServletInputStream is = request.getInputStream();
+                    byte[] buf = IOUtils.toByteArray(is);
+
+                    AudioInputStream ais = AudioSystem.getAudioInputStream(new ByteArrayInputStream(buf));
+                    Clip clip = AudioSystem.getClip();
+                    clip.open(ais);
+                    clip.addLineListener(new LineListener() {
+                        @Override
+                        public void update(LineEvent event) {
+                            if(event.getType().equals(LineEvent.Type.STOP)){
+                                event.getLine().close();
+                            }
+                        }
+                    });
+                    clip.start();
+
+                } catch (IOException | UnsupportedAudioFileException | LineUnavailableException e) {
+                    log.error("Error transmitting sound.", e);
+                }
                 break;
         }
 

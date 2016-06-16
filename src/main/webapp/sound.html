@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+    <script src="js/recorder.js"></script>
 </head>
 <style>
     div {
@@ -19,10 +20,9 @@
     <div id="control"></div>
     <div id="event"></div>
     <div id="status"></div>
-    <!--<audio controls preload="none">-->
-        <!--<source  src=""/>-->
-        <!--Not supportet in this browser-->
-    <!--</audio>-->
+    <div id="recording">
+        <a id="sendBtn" href="#">Push to speak</a>
+    </div>
 </body>
 </html>
 <script>
@@ -35,13 +35,77 @@
     var streamSrc = 'http://'+window.location.hostname+':8090/sound.wav';
     var servletUrl = '/webrc/soundServlet?command=';
 
+    var audioContext;
+    var recorder;
+
+    function startUserMedia(stream) {
+        var input = audioContext.createMediaStreamSource(stream);
+        console.log('Media stream created.');
+
+        recorder = new Recorder(input);
+        console.log('Recorder initialised.');
+    }
+
+    function sendWavToServlet() {
+        recorder && recorder.exportWAV(function(blob) {
+            $.post({
+                url: servletUrl + 'send',
+                contentType: 'audio/wav',
+                data: blob,
+                processData: false
+            }).success(function () {
+                console.log('Blob sent to servlet');
+                setEvent('Speach sent');
+            }).error(function () {
+                console.log('Error sending blob to servlet');
+                setEvent('Error sending speach');
+            });
+        });
+    }
+
     $(function () {
+        $('#sendBtn').on('contextmenu taphold', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.cancelBubble = true;
+            event.returnValue = false;
+            return false;
+        })
+
         $('#homeBtn').button();
         setStatus('Initializing media server..');
         $.post(servletUrl + 'start', function () {
             createAudio();
         });
 
+        $('#sendBtn').button();
+        $('#sendBtn').on('mousedown touchstart', function () {
+            setEvent('Recording speach..');
+            recorder && recorder.record();
+            console.log('Recording...');
+        });
+        $('#sendBtn').on('mouseup touchend', function () {
+            setEvent('Sending speach..');
+            recorder && recorder.stop();
+            console.log('Stopped recording.');
+            sendWavToServlet();
+            recorder.clear();
+        });
+
+        try {
+            // webkit shim
+            window.AudioContext = window.AudioContext || window.webkitAudioContext;
+            navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
+            window.URL = window.URL || window.webkitURL;
+
+            audioContext = new AudioContext;
+        } catch (e) {
+            alert('No web audio support in this browser!');
+        }
+
+        navigator.getUserMedia({audio: true}, startUserMedia, function(e) {
+            console.error('No live audio input: ' + e);
+        });
     })
 
     function setStatus(statusText){
