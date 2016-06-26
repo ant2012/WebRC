@@ -121,6 +121,7 @@
 
             //WebRC info
             double voltage = Double.NEGATIVE_INFINITY;
+            double rawVoltage = Double.NEGATIVE_INFINITY;
             double temperature = Double.NEGATIVE_INFINITY;
             String batteryLevel = "n/a";
             String fwVersion = null;
@@ -133,8 +134,9 @@
                     temperature = arduinoState.getTemperature() / 1000;
                     Battery battery = arduinoState.getBattery();
                     if (battery != null) {
-                        batteryLevel = String.valueOf(battery.checkVoltageLevel()) + "%";
-                        voltage = battery.getCurrentVoltage() / 1000;
+                        batteryLevel = String.valueOf(battery.getVoltageLevel()) + "%";
+                        voltage = battery.getVoltage() / 1000;
+                        rawVoltage = battery.getRawVoltage();
                     }
                     fwVersion = arduinoState.getFirmwareVersion();
                     sketchSize = arduinoState.getSketchSize();
@@ -144,7 +146,8 @@
                 }
             }
             String arduinoTemp = (Double.compare(temperature, Double.NEGATIVE_INFINITY) == 0 ? "n/a" : temperature + "&deg;C");
-            String arduinoVoltage = (Double.compare(voltage, Double.NEGATIVE_INFINITY) == 0 ? "n/a" : voltage + "V");
+            String arduinoVoltage = (Double.compare(voltage, Double.NEGATIVE_INFINITY) == 0 ? "n/a" : String.format("%.3fV", voltage));
+            String rawVoltageStr = (Double.compare(rawVoltage, Double.NEGATIVE_INFINITY) == 0 ? "n/a" : String.valueOf(rawVoltage));
             String fwVersionStr = (fwVersion == null) ? "n/a" : fwVersion;
             String sketchSizeStr = (sketchSize < 0) ? "n/a" : String.valueOf(sketchSize)+"B";
             String buildDateStr = (buildDate == null) ? "n/a" : DateFormatUtils.format(buildDate, "MMM d yyyy HH:mm:ss");
@@ -159,6 +162,7 @@
                 <div class="panel-body">
                     Arduino onboard temperature:<strong><%out.println(arduinoTemp);%></strong><br>
                     Arduino onboard voltage:<strong><%out.println(arduinoVoltage);%></strong><br>
+                    Raw voltage:<strong><%out.println(rawVoltageStr);%></strong><br>
                     Battery level:<strong><%out.println(batteryLevel);%></strong><br/>
                     FW version:<strong><%out.println(fwVersionStr);%></strong><br/>
                     Sketch size:<strong><%out.println(sketchSizeStr);%></strong><br/>
