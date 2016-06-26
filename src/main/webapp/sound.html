@@ -137,10 +137,10 @@
         $(audio).on('abort durationchange error loadeddata loadedmetadata loadstart playing stalled suspend waiting ratechange pause seeked', function (event) {
             var eventText = event.type + '...<br>';
             setEvent(eventText);
-            console.log(event.type);
+//            console.log(event.type);
         });
 
-        $(audio).on('abort durationchange error loadeddata loadedmetadata loadstart playing stalled suspend waiting ratechange pause seeked progress timeupdate', function (event) {
+        $(audio).on('abort canplay canplaythrough durationchange emptied ended error loadeddata loadedmetadata loadstart pause play playing progress ratechange seeked seeking stalled suspend timeupdate volumechange waiting', function (event) {
             var o = event.target;
             var statusText = '';
 
@@ -155,6 +155,7 @@
             statusText += 'currentTime: ' + o.currentTime + '<br>';
             statusText += 'networkState: ' + o.networkState + '<br>';
 
+            console.log(event.type + 'ns: ' + o.networkState);
             setStatus(statusText);
         });
 
@@ -162,8 +163,12 @@
             event.target.load();
         });
 
+        $(audio).on('waiting', function (event) {
+            event.target.load();
+        });
+
         $(audio).on('suspend', function (event) {
-            event.target.play();
+            if(event.target.networkState != 2) event.target.load();
         });
 
         var stopBtn = $('<a/>', {
